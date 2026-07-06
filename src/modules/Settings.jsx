@@ -17,6 +17,8 @@ export default function Settings({ onSave }) {
   const saved = get()
   const [groqKey, setGroqKey] = useState(saved.groqKey || '')
   const [deepseekKey, setDeepseekKey] = useState(saved.deepseekKey || '')
+  const [newsCatcherKey, setNewsCatcherKey] = useState(saved.newsCatcherKey || '')
+  const [newsApiKey, setNewsApiKey] = useState(saved.newsApiKey || '')
   const [preferred, setPreferred] = useState(saved.preferredProvider || 'groq')
   const [level, setLevel] = useState(saved.level || 'Beginner')
   const [targetPct, setTargetPct] = useState(saved.targetPct || '95')
@@ -44,7 +46,15 @@ export default function Settings({ onSave }) {
 
   const save = () => {
     setSaving(true)
-    localStorage.setItem('cat_settings', JSON.stringify({ groqKey, deepseekKey, preferredProvider: preferred, level, targetPct }))
+    localStorage.setItem('cat_settings', JSON.stringify({
+      groqKey,
+      deepseekKey,
+      newsCatcherKey,
+      newsApiKey,
+      preferredProvider: preferred,
+      level,
+      targetPct,
+    }))
     if (onSave) onSave()
     showToast('Settings saved', 'success')
     setTimeout(() => setSaving(false), 800)
@@ -86,9 +96,25 @@ export default function Settings({ onSave }) {
 
   return (
     <div className="max-w-2xl space-y-4 animate-fade-in">
-      <SectionHeader title="Settings" subtitle="Configure AI providers and learning preferences" />
+      <SectionHeader title="Settings" subtitle="Configure AI providers, news feeds and learning preferences" />
       <KeyInput label="Groq API Key" sub="Free tier available — get key at console.groq.com (Llama 3.3 70B, fastest)" val={groqKey} setVal={setGroqKey} testing={testingG} testResult={testG} onTest={doTestGroq} placeholder="gsk_..." />
       <KeyInput label="DeepSeek API Key" sub="Get key at platform.deepseek.com — deep reasoning, great for explanations" val={deepseekKey} setVal={setDeepseekKey} testing={testingD} testResult={testD} onTest={doTestDeepseek} placeholder="sk-..." />
+      <Card>
+        <p className="text-sm font-semibold text-text-primary mb-2">News Feed Providers</p>
+        <p className="text-xs text-text-secondary mb-3">For Times of India / Economic Times / Hindustan Times / finance aggregation, add at least one key below.</p>
+        <div className="space-y-3">
+          <div>
+            <p className="text-xs text-text-muted mb-1">NewsCatcher API Key</p>
+            <input type="password" value={newsCatcherKey} onChange={e => setNewsCatcherKey(e.target.value)} placeholder="newscatcher key"
+              className="w-full bg-bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-cat-blue transition-colors" />
+          </div>
+          <div>
+            <p className="text-xs text-text-muted mb-1">NewsAPI Key</p>
+            <input type="password" value={newsApiKey} onChange={e => setNewsApiKey(e.target.value)} placeholder="newsapi key"
+              className="w-full bg-bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-cat-blue transition-colors" />
+          </div>
+        </div>
+      </Card>
       <Card>
         <p className="text-sm font-semibold text-text-primary mb-1">Preferred AI Provider</p>
         <p className="text-xs text-text-secondary mb-2">Used first when both keys are set. App auto-falls-back to the other if a call fails.</p>

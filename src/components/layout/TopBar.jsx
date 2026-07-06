@@ -1,7 +1,7 @@
 import React from 'react'
 import { Wifi, WifiOff, Clock } from 'lucide-react'
 
-const TITLES = { dashboard:'Dashboard', planner:'Study Planner', analysis:'My Analysis', varc:'VARC Practice', dilr:'DILR Practice', quant:'Quantitative Aptitude', vocabulary:'Vocabulary Builder', pyq:'Previous Year Papers', pyq_topics:'Topic-wise PYQs', mock:'Mock Tests', revision:'Revision & Error Log', tutor:'AI Tutor', settings:'Settings' }
+const TITLES = { dashboard:'Dashboard', planner:'Study Planner', analysis:'My Analysis', varc:'VARC Practice', dilr:'DILR Practice', quant:'Quantitative Aptitude', news:'Daily News Intelligence', vocabulary:'Vocabulary Builder', pyq:'Previous Year Papers', pyq_topics:'Topic-wise PYQs', mock:'Mock Tests', revision:'Revision & Error Log', tutor:'AI Tutor', settings:'Settings' }
 
 const fmt = (s) => { const h=Math.floor(s/3600),m=Math.floor((s%3600)/60); return h>0?`${h}h ${m}m`:`${m}m` }
 
