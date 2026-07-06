@@ -2,11 +2,18 @@ import { callAI } from './ai.js'
 
 const getSettings = () => { try { return JSON.parse(localStorage.getItem('cat_settings') || '{}') } catch { return {} } }
 
-const NEWS_DOMAINS = [
+// NewsData-supported Indian sources (lokmattimes.com is not in their database).
+const INDIA_DOMAINS = [
   'timesofindia.indiatimes.com',
-  'economictimes.indiatimes.com',
   'hindustantimes.com',
-  'lokmattimes.com',
+  'thehindu.com',
+  'ndtv.com',
+].join(',')
+
+const FINANCE_DOMAINS = [
+  'economictimes.indiatimes.com',
+  'livemint.com',
+  'business-standard.com',
 ].join(',')
 
 const MARKET_QUERY = 'IPO OR stock market OR shares OR Sensex OR Nifty OR NSE OR BSE'
@@ -136,7 +143,7 @@ const readIndianFromPaidApis = async () => {
     return postProxy('newsdata', s.newsDataKey, {
       query: INDIA_QUERY,
       pageSize: 25,
-      domains: NEWS_DOMAINS,
+      domains: INDIA_DOMAINS,
       country: 'in',
       language: 'en',
     })
@@ -145,7 +152,7 @@ const readIndianFromPaidApis = async () => {
     return postProxy('newscatcher', s.newsCatcherKey, {
       query: INDIA_QUERY,
       pageSize: 25,
-      domains: NEWS_DOMAINS,
+      domains: INDIA_DOMAINS,
       country: 'IN',
       language: 'en',
     })
@@ -154,7 +161,7 @@ const readIndianFromPaidApis = async () => {
     return postProxy('newsapi', s.newsApiKey, {
       query: INDIA_QUERY,
       pageSize: 25,
-      domains: NEWS_DOMAINS,
+      domains: INDIA_DOMAINS,
       language: 'en',
     })
   }
@@ -167,7 +174,7 @@ const readFinanceFromPaidApis = async () => {
     return postProxy('newsdata', s.newsDataKey, {
       query: MARKET_QUERY,
       pageSize: 25,
-      domains: NEWS_DOMAINS,
+      domains: FINANCE_DOMAINS,
       country: 'in',
       language: 'en',
       category: 'business',
@@ -177,7 +184,7 @@ const readFinanceFromPaidApis = async () => {
     return postProxy('newscatcher', s.newsCatcherKey, {
       query: MARKET_QUERY,
       pageSize: 25,
-      domains: NEWS_DOMAINS,
+      domains: FINANCE_DOMAINS,
       country: 'IN',
       language: 'en',
       category: 'business',
@@ -187,7 +194,7 @@ const readFinanceFromPaidApis = async () => {
     return postProxy('newsapi', s.newsApiKey, {
       query: MARKET_QUERY,
       pageSize: 25,
-      domains: NEWS_DOMAINS,
+      domains: FINANCE_DOMAINS,
       language: 'en',
     })
   }

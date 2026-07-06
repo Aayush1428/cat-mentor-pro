@@ -87,18 +87,30 @@ export default async function handler(req, res) {
     }
 
     if (provider === 'newsdata') {
-      const url = new URL('https://newsdata.io/api/1/news')
-      url.searchParams.set('apikey', apiKey)
-      url.searchParams.set('q', query || 'India')
-      url.searchParams.set('language', language)
-      url.searchParams.set('country', String(country || 'in').toLowerCase())
-      if (domains) url.searchParams.set('domainurl', domains)
-      if (category) url.searchParams.set('category', category)
+      const buildUrl = (withDomains) => {
+        const url = new URL('https://newsdata.io/api/1/news')
+        url.searchParams.set('apikey', apiKey)
+        url.searchParams.set('q', query || 'India')
+        url.searchParams.set('language', language)
+        url.searchParams.set('country', String(country || 'in').toLowerCase())
+        if (withDomains && domains) url.searchParams.set('domainurl', domains)
+        if (category) url.searchParams.set('category', category)
+        return url.toString()
+      }
 
-      const r = await fetch(url.toString(), { method: 'GET' })
-      const data = await r.json()
+      let r = await fetch(buildUrl(true), { method: 'GET' })
+      let data = await r.json()
+
+      // NewsData fails the whole request if any domain is unsupported — retry without the filter.
+      const firstErr = Array.isArray(data?.results) ? data.results[0] : null
+      if (data?.status === 'error' && firstErr?.code === 'UnsupportedFilter' && domains) {
+        r = await fetch(buildUrl(false), { method: 'GET' })
+        data = await r.json()
+      }
+
       if (data?.status === 'error') {
-        const msg = data?.message || data?.results?.message || 'NewsData request failed'
+        const errObj = Array.isArray(data.results) ? data.results[0] : data.results
+        const msg = errObj?.message || data?.message || 'NewsData request failed'
         return json(res, 400, { error: `NewsData: ${msg}` })
       }
       if (!r.ok) {
