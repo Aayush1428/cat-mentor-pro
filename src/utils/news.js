@@ -36,18 +36,29 @@ const dedupe = (items) => {
 const sortByDateDesc = (items) =>
   items.slice().sort((a, b) => (safeDate(b.publishedAt) || '').localeCompare(safeDate(a.publishedAt) || ''))
 
+const sanitizeHeader = (val) => {
+  if (!val) return ''
+  return String(val).replace(/[^\x00-\x7F]/g, '?')
+}
+
 const postProxy = async (provider, key, payload) => {
-  const r = await fetch('/api/news', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${key}`,
-    },
-    body: JSON.stringify({ provider, ...payload }),
-  })
-  const data = await r.json()
-  if (!r.ok) throw new Error(data?.error || 'News provider request failed')
-  return data.articles || []
+  if (!key) throw new Error(`No API key for ${provider}`)
+  try {
+    const r = await fetch('/api/news', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${sanitizeHeader(key)}`,
+      },
+      body: JSON.stringify({ provider, ...payload }),
+    })
+    const data = await r.json()
+    if (!r.ok) throw new Error(data?.error || `${provider} request failed (HTTP ${r.status})`)
+    return data.articles || []
+  } catch (e) {
+    if (e.message.includes('ISO-8859-1')) throw new Error(`${provider}: Invalid API key format (contains special characters)`)
+    throw e
+  }
 }
 
 const readFreeHN = async () => {

@@ -10,19 +10,30 @@ const parseJSON = (raw) => {
   }
 }
 
+const sanitizeHeader = (val) => {
+  if (!val) return ''
+  return String(val).replace(/[^\x00-\x7F]/g, '?')
+}
+
 const callProvider = async (provider, apiKey, messages, maxTokens) => {
   const endpoint = provider === 'groq' ? '/api/groq' : '/api/deepseek'
   const model = provider === 'groq' ? 'llama-3.3-70b-versatile' : 'deepseek-chat'
-  const r = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-    body: JSON.stringify({ model, messages, max_tokens: maxTokens, temperature: 0.2 }),
-  })
-  const data = await r.json()
-  if (data.error) throw new Error(data.error.message)
-  const text = data.choices?.[0]?.message?.content
-  if (!text) throw new Error('Empty response')
-  return text
+  if (!apiKey) throw new Error(`No ${provider} API key configured`)
+  try {
+    const r = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sanitizeHeader(apiKey)}` },
+      body: JSON.stringify({ model, messages, max_tokens: maxTokens, temperature: 0.2 }),
+    })
+    const data = await r.json()
+    if (data.error) throw new Error(data.error.message)
+    const text = data.choices?.[0]?.message?.content
+    if (!text) throw new Error('Empty response')
+    return text
+  } catch (e) {
+    if (e.message.includes('ISO-8859-1')) throw new Error(`${provider}: Invalid API key format (contains special characters)`)
+    throw e
+  }
 }
 
 export const callAI = async (systemPrompt, userMessage, maxTokens = 2000) => {
