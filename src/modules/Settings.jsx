@@ -48,11 +48,11 @@ export default function Settings({ onSave }) {
   const save = () => {
     setSaving(true)
     localStorage.setItem('cat_settings', JSON.stringify({
-      groqKey,
-      deepseekKey,
-      newsDataKey,
-      newsCatcherKey,
-      newsApiKey,
+      groqKey: groqKey.trim(),
+      deepseekKey: deepseekKey.trim(),
+      newsDataKey: newsDataKey.trim(),
+      newsCatcherKey: newsCatcherKey.trim(),
+      newsApiKey: newsApiKey.trim(),
       preferredProvider: preferred,
       level,
       targetPct,
@@ -76,6 +76,17 @@ export default function Settings({ onSave }) {
     try { await testDeepseekConnection(deepseekKey.trim()); setTestD('ok'); showToast('DeepSeek connected ✓', 'success') }
     catch { setTestD('err'); showToast('DeepSeek connection failed', 'error') }
     finally { setTestingD(false) }
+  }
+
+  const clearNewsCache = () => {
+    try {
+      localStorage.removeItem('cat_news_india')
+      localStorage.removeItem('cat_news_finance')
+      localStorage.removeItem('cat_news_hn')
+      localStorage.removeItem('cat_news_devto')
+      localStorage.removeItem('cat_news_read')
+      showToast('News cache cleared', 'success')
+    } catch (e) { showToast('Cache clear failed: ' + e.message, 'error') }
   }
 
   const KeyInput = ({ label, sub, val, setVal, testing, testResult, onTest, placeholder }) => (
@@ -149,6 +160,9 @@ export default function Settings({ onSave }) {
         <div className="flex flex-wrap gap-3">
           <button onClick={() => { clearAllCache(); showToast('AI cache cleared', 'success') }} className="px-3 py-2 rounded-lg border border-border text-xs text-text-secondary hover:border-cat-orange hover:text-cat-orange transition-all flex items-center gap-1.5">
             <Trash2 size={12}/> Clear AI Cache
+          </button>
+          <button onClick={clearNewsCache} className="px-3 py-2 rounded-lg border border-border text-xs text-text-secondary hover:border-cat-orange hover:text-cat-orange transition-all flex items-center gap-1.5">
+            <Trash2 size={12}/> Clear News Cache
           </button>
           <button onClick={() => { clearPerformance(); showToast('Performance data cleared', 'success') }} className="px-3 py-2 rounded-lg border border-cat-red/30 text-xs text-cat-red hover:bg-cat-red/10 transition-all flex items-center gap-1.5">
             <Trash2 size={12}/> Reset Performance Data
