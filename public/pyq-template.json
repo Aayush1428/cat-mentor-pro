@@ -1,0 +1,36 @@
+[
+  {
+    "id": "cat2023_qa_s1_q12",
+    "year": 2023,
+    "slot": "Slot 1",
+    "sectionId": "QA",
+    "topicId": "qa_tsd",
+    "topic": "Time, Speed & Distance",
+    "qNo": 12,
+    "type": "MCQ",
+    "question": "REPLACE THIS WITH THE REAL QUESTION TEXT COPIED FROM A VERIFIED SOURCE (2IIM / Cracku / Bodhee Prep)",
+    "options": ["A) option one", "B) option two", "C) option three", "D) option four"],
+    "correct": "A",
+    "solution": "REPLACE THIS WITH THE VERIFIED STEP-BY-STEP SOLUTION FROM THE SAME SOURCE",
+    "source": "Cracku",
+    "sourceUrl": "https://cracku.in/cat-previous-papers",
+    "verified": true
+  },
+  {
+    "id": "cat2023_qa_s1_q18",
+    "year": 2023,
+    "slot": "Slot 1",
+    "sectionId": "QA",
+    "topicId": "qa_numbers",
+    "topic": "Number System & Divisibility",
+    "qNo": 18,
+    "type": "TITA",
+    "question": "REPLACE THIS WITH THE REAL TITA (type-in-the-answer) QUESTION TEXT",
+    "options": [],
+    "correct": "24",
+    "solution": "REPLACE THIS WITH THE VERIFIED SOLUTION",
+    "source": "2IIM",
+    "sourceUrl": "https://online.2iim.com/CAT-question-paper/",
+    "verified": true
+  }
+]

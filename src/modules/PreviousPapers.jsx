@@ -5,9 +5,10 @@ import { recordAttempt } from '../utils/performance.js'
 import { logResult } from '../utils/bookmarks.js'
 import { PREVIOUS_PAPERS, PAPER_SOURCES, SECTIONS, getAllTopics } from '../data/curriculum.js'
 import { getPYQByTopic } from '../data/pyqBank.js'
+import { getOfficialByTopic, getOfficialYears } from '../data/pyqOfficial.js'
 import { FileText, ExternalLink, BookMarked, RotateCcw, ShieldCheck } from 'lucide-react'
 
-const SYSTEM = `You are a CAT exam expert with deep knowledge of CAT papers from 2014–2024. Generate accurate CAT-style questions. Return ONLY valid JSON, no preamble.`
+const SYSTEM = `You are a CAT question writer. You create ORIGINAL practice questions in the STYLE of CAT (Quantitative Aptitude, DILR, VARC). You NEVER claim a question is from a specific real exam year or slot, and you NEVER fabricate exam attributions. Return ONLY valid JSON, no preamble.`
 
 // ─── Previous Papers Module ───────────────────────────────────────────────────
 export function PreviousPapers() {
@@ -87,39 +88,40 @@ export function PreviousPapers() {
 }
 
 // ─── Topic-wise PYQs Module ───────────────────────────────────────────────────
-const buildPYQPrompt = (topic, section, count) => `Generate ${count} Previous Year CAT questions (or CAT-style questions based on past patterns) on: "${topic}" from ${section} section.
+const buildPYQPrompt = (topic, section, count) => `Generate ${count} ORIGINAL practice questions in the STYLE of CAT ${section} on the topic: "${topic}".
 
-IMPORTANT: Organise the questions YEAR-WISE. Attribute each question to a specific CAT exam year (between 2015 and 2024) based on when this concept/pattern actually appeared. Spread them across multiple years where possible, and sort the array from the MOST RECENT year to the oldest.
+These are PRACTICE questions modelled on CAT patterns. Do NOT claim they are from any specific real CAT year or slot. Do NOT invent exam attributions.
 
-Return ONLY a JSON array (already sorted newest year first):
+Return ONLY a JSON array:
 [{
   "question": "complete question text",
   "options": ["A) ","B) ","C) ","D) "],
   "correct": "A|B|C|D",
   "solution": "complete step-by-step solution",
-  "year": "2024",
-  "slot": "Slot 2",
   "difficulty": "Easy|Medium|Hard",
   "key_concept": "the specific concept this question tests"
-}]
+}]`
 
-The "year" field MUST be a 4-digit year only (e.g. "2024"). Put the slot in the separate "slot" field.`
-
-// Extract a 4-digit year from any label the AI or bank returns.
+// Extract a 4-digit year from any label (string or number).
 const extractYear = (raw) => {
   const m = String(raw || '').match(/(19|20)\d{2}/)
   return m ? m[0] : null
 }
 
-// Group questions under their CAT year, keeping each question's original index
-// so answer tracking and scoring stay correct. Real years sort newest-first;
-// verified/undated questions fall to the bottom.
+const TIER_LABEL = {
+  verified: 'Verified Practice · CAT-level',
+  ai: 'AI Practice · not real PYQs',
+}
+
+// Group questions under their CAT year (authentic), keeping each question's original
+// index so answer tracking and scoring stay correct. Real years sort newest-first;
+// verified/AI practice questions fall under their own labelled group.
 const groupByYear = (questions) => {
   const groups = {}
   questions.forEach((q, idx) => {
     const yr = extractYear(q.year)
-    const key = yr ? `CAT ${yr}` : (q.year || 'CAT-style')
-    if (!groups[key]) groups[key] = { key, year: yr, items: [] }
+    const key = yr ? `CAT ${yr}` : (TIER_LABEL[q._tier] || 'CAT-style Practice')
+    if (!groups[key]) groups[key] = { key, year: yr, tier: q._tier, items: [] }
     groups[key].items.push({ q, idx })
   })
   return Object.values(groups).sort((a, b) => {
@@ -130,6 +132,26 @@ const groupByYear = (questions) => {
   })
 }
 
+// Honest source-tier banner shown above the questions.
+function TierBanner({ tier, sources = [] }) {
+  if (tier === 'official') return (
+    <div className="rounded-xl p-3 bg-cat-green/5 border border-cat-green/30 text-xs text-text-secondary leading-relaxed">
+      <span className="font-semibold text-cat-green">✓ Authentic CAT PYQs.</span> Real questions from official papers{sources.length ? `, verified from ${sources.join(', ')}` : ''}. Grouped by exam year below.
+    </div>
+  )
+  if (tier === 'verified') return (
+    <div className="rounded-xl p-3 bg-cat-blue/5 border border-cat-blue/30 text-xs text-text-secondary leading-relaxed">
+      <span className="font-semibold text-cat-blue">Verified practice.</span> Hand-checked answers at CAT level. These are original practice questions, not tied to a specific exam year.
+    </div>
+  )
+  if (tier === 'ai') return (
+    <div className="rounded-xl p-3 bg-cat-orange/5 border border-cat-orange/30 text-xs text-text-secondary leading-relaxed">
+      <span className="font-semibold text-cat-orange">AI practice — not real PYQs.</span> Generated in CAT style. Years/slots are not claimed. For authentic papers, use the official links in “Previous Papers”.
+    </div>
+  )
+  return null
+}
+
 
 function PYQSession({ topic, section, hasApiKey, onBack, onNavigate }) {
   const [count, setCount] = useState(5)
@@ -138,7 +160,21 @@ function PYQSession({ topic, section, hasApiKey, onBack, onNavigate }) {
   const [answers, setAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
 
+  const official = getOfficialByTopic(topic.id)
+  const officialYears = getOfficialYears(topic.id)
   const bank = getPYQByTopic(topic.id)
+  const [tier, setTier] = useState(null)
+
+  const loadOfficial = () => {
+    const mapped = official.map(q => ({
+      ...q,
+      key_concept: q.topic || q.key_concept,
+      difficulty: q.difficulty || 'Medium',
+      _tier: 'official',
+    }))
+    setTier('official'); setQuestions(mapped); setAnswers({}); setSubmitted(false)
+    showToast(`Loaded ${mapped.length} authentic PYQs`, 'success')
+  }
 
   const loadVerified = () => {
     const mapped = bank.map(q => ({
@@ -146,36 +182,44 @@ function PYQSession({ topic, section, hasApiKey, onBack, onNavigate }) {
       options: q.options,
       correct: q.correct,
       solution: q.solution,
-      year: 'CAT-level · Verified',
       difficulty: q.difficulty,
       key_concept: q.concept,
+      _tier: 'verified',
     }))
-    setQuestions(mapped); setAnswers({}); setSubmitted(false)
+    setTier('verified'); setQuestions(mapped); setAnswers({}); setSubmitted(false)
     showToast(`Loaded ${mapped.length} verified questions`, 'success')
   }
 
   const generate = async () => {
     if (!hasApiKey) { onNavigate('settings'); return }
-    setLoading(true); setQuestions([]); setAnswers({}); setSubmitted(false)
+    setLoading(true); setQuestions([]); setAnswers({}); setSubmitted(false); setTier('ai')
     try {
       const d = await callAI(SYSTEM, buildPYQPrompt(topic.name, section.label, count), 2500)
-      setQuestions(Array.isArray(d) ? d : [])
+      const arr = (Array.isArray(d) ? d : []).map(q => ({ ...q, _tier: 'ai' }))
+      setQuestions(arr)
     } catch (e) { showToast('Error: ' + e.message, 'error') }
     finally { setLoading(false) }
+  }
+
+  const isTITA = (q) => q.type === 'TITA' || !q.options || q.options.length === 0
+  const gradeOne = (q, ans) => {
+    if (ans == null || ans === '') return false
+    if (isTITA(q)) return String(ans).trim().toLowerCase() === String(q.correct).trim().toLowerCase()
+    return ans === q.correct
   }
 
   const submit = () => {
     setSubmitted(true)
     questions.forEach((q,i) => {
-      const correct = answers[i] === q.correct
+      const correct = gradeOne(q, answers[i])
       recordAttempt(section.id, topic.name, correct)
       logResult({ section: section.id, topic: topic.name, source: 'pyq', stem: q.question, options: q.options, answer: q.correct, explanation: q.solution, isCorrect: correct })
     })
-    const score = questions.filter((q,i) => answers[i]===q.correct).length
-    showToast(`Score: ${score}/${questions.length}`, score >= questions.length * 0.75 ? 'success' : 'info')
+    const s = questions.filter((q,i) => gradeOne(q, answers[i])).length
+    showToast(`Score: ${s}/${questions.length}`, s >= questions.length * 0.75 ? 'success' : 'info')
   }
 
-  const score = submitted ? questions.filter((q,i) => answers[i]===q.correct).length : 0
+  const score = submitted ? questions.filter((q,i) => gradeOne(q, answers[i])).length : 0
 
   return (
     <div className="animate-fade-in max-w-3xl space-y-4">
@@ -183,26 +227,47 @@ function PYQSession({ topic, section, hasApiKey, onBack, onNavigate }) {
       <div className="flex items-center gap-2 flex-wrap">
         <h3 className="font-semibold text-text-primary">{topic.name}</h3>
         <Badge variant="blue">{section.label}</Badge>
-        <Badge variant="orange">PYQ Style</Badge>
+        {tier==='official' && <Badge variant="green">Authentic PYQ</Badge>}
+        {tier==='verified' && <Badge variant="blue">Verified Practice</Badge>}
+        {tier==='ai' && <Badge variant="orange">AI Practice</Badge>}
+        {!tier && <Badge variant="gray">Pick a source below</Badge>}
       </div>
 
       <Card className="space-y-3">
-        {bank.length > 0 && (
-          <div className="bg-cat-green/5 border border-cat-green/25 rounded-xl p-3">
-            <div className="flex items-center gap-1.5 mb-2">
+        {official.length > 0 ? (
+          <div className="bg-cat-green/5 border border-cat-green/30 rounded-xl p-3">
+            <div className="flex items-center gap-1.5 mb-1">
               <ShieldCheck size={14} className="text-cat-green" />
-              <p className="text-xs font-semibold text-cat-green">{bank.length} verified questions available — no API key needed</p>
+              <p className="text-xs font-semibold text-cat-green">{official.length} authentic PYQs{officialYears.length ? ` · ${officialYears.join(', ')}` : ''}</p>
             </div>
-            <button onClick={loadVerified} className="w-full py-2.5 bg-cat-green text-white rounded-xl text-xs font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2">
-              <BookMarked size={14}/> Load Verified PYQ Bank
+            <p className="text-[10px] text-text-muted mb-2">Real questions from official CAT papers, verified from public keys.</p>
+            <button onClick={loadOfficial} className="w-full py-2.5 bg-cat-green text-white rounded-xl text-xs font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2">
+              <FileText size={14}/> Load Official PYQs (year-wise)
+            </button>
+          </div>
+        ) : (
+          <div className="bg-bg-secondary border border-border rounded-xl p-3">
+            <p className="text-[11px] text-text-secondary leading-relaxed">No authentic PYQs imported for this topic yet. Add real, verified questions in{' '}
+              <button onClick={() => onNavigate('settings')} className="text-cat-blue underline font-medium">Settings → Official PYQ Bank</button>. Until then, use the verified practice bank or AI practice below.</p>
+          </div>
+        )}
+
+        {bank.length > 0 && (
+          <div className="bg-cat-blue/5 border border-cat-blue/25 rounded-xl p-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <ShieldCheck size={14} className="text-cat-blue" />
+              <p className="text-xs font-semibold text-cat-blue">{bank.length} verified practice questions — hand-checked answers, no API key needed</p>
+            </div>
+            <button onClick={loadVerified} className="w-full py-2.5 bg-cat-blue text-white rounded-xl text-xs font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2">
+              <BookMarked size={14}/> Load Verified Practice Bank
             </button>
           </div>
         )}
-        <div><p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">AI-Generated Questions</p>
+        <div><p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">AI Practice (CAT-style · not real PYQs)</p>
           <div className="flex gap-2">{[3,5,10].map(n=><button key={n} onClick={()=>setCount(n)} className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all ${count===n?'bg-cat-blue text-white border-cat-blue':'border-border text-text-secondary'}`}>{n}</button>)}</div>
         </div>
-        <button onClick={generate} disabled={loading} className="w-full py-3 bg-cat-blue text-white rounded-xl font-semibold hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2">
-          <BookMarked size={15}/>{loading?'Generating...':'Generate PYQ-Style Questions'}
+        <button onClick={generate} disabled={loading} className="w-full py-3 bg-bg-secondary border border-border text-text-primary rounded-xl font-semibold hover:border-cat-blue disabled:opacity-50 transition-all flex items-center justify-center gap-2">
+          <BookMarked size={15}/>{loading?'Generating...':'Generate AI Practice Questions'}
         </button>
       </Card>
 
@@ -223,6 +288,8 @@ function PYQSession({ topic, section, hasApiKey, onBack, onNavigate }) {
             </Card>
           )}
 
+          <TierBanner tier={tier} sources={tier==='official' ? [...new Set(official.map(q=>q.source).filter(Boolean))] : []} />
+
           {groupByYear(questions).map(group => (
             <div key={group.key} className="space-y-3">
               <div className="flex items-center gap-2 pt-1">
@@ -241,22 +308,34 @@ function PYQSession({ topic, section, hasApiKey, onBack, onNavigate }) {
                     <div className="flex items-center gap-2 mb-2 flex-wrap">
                       <span className="text-xs font-mono text-cat-blue font-bold">Q{i+1}</span>
                       {q.slot && <Badge variant="gray">{q.slot}</Badge>}
-                      <Badge variant={q.difficulty==='Easy'?'green':q.difficulty==='Medium'?'orange':'red'}>{q.difficulty}</Badge>
+                      {q._tier === 'official' && q.source && <Badge variant="blue">{q.source}</Badge>}
+                      {isTITA(q) && <Badge variant="orange">TITA</Badge>}
+                      {q.difficulty && <Badge variant={q.difficulty==='Easy'?'green':q.difficulty==='Medium'?'orange':'red'}>{q.difficulty}</Badge>}
                       <div className="ml-auto"><BookmarkButton item={{ section: section.id, topic: topic.name, source: 'pyq', stem: q.question, options: q.options, answer: q.correct, explanation: q.solution }} /></div>
                     </div>
                     <p className="text-sm font-medium text-text-primary mb-3 leading-relaxed whitespace-pre-line">{q.question}</p>
-                    <div className="space-y-1.5 mb-3">
-                      {q.options.map((opt,oi) => {
-                        const letter=['A','B','C','D'][oi]
-                        const isSel=sel===letter, ok=submitted&&letter===q.correct, bad=submitted&&isSel&&!ok
-                        return <button key={oi} onClick={()=>!submitted&&setAnswers(a=>({...a,[i]:letter}))} disabled={submitted}
-                          className={`w-full text-left px-3 py-2 rounded-lg text-xs border transition-all ${ok?'border-cat-green bg-cat-green/10 text-cat-green':bad?'border-cat-red bg-cat-red/10 text-cat-red':isSel?'border-cat-blue bg-cat-blue/10 text-cat-blue':'border-border text-text-secondary hover:border-border-light disabled:opacity-60'}`}>{opt}</button>
-                      })}
-                    </div>
+                    {isTITA(q) ? (
+                      <div className="mb-3">
+                        <input type="text" value={sel || ''} onChange={e=>!submitted&&setAnswers(a=>({...a,[i]:e.target.value}))} disabled={submitted}
+                          placeholder="Type your answer (TITA)"
+                          className={`w-full px-3 py-2 rounded-lg text-sm border bg-bg-secondary transition-all focus:outline-none ${submitted?(gradeOne(q,sel)?'border-cat-green text-cat-green':'border-cat-red text-cat-red'):'border-border text-text-primary focus:border-cat-blue'}`} />
+                        {submitted && !gradeOne(q,sel) && <p className="mt-1.5 text-xs text-cat-green">Correct answer: <span className="font-semibold">{q.correct}</span></p>}
+                      </div>
+                    ) : (
+                      <div className="space-y-1.5 mb-3">
+                        {q.options.map((opt,oi) => {
+                          const letter=['A','B','C','D'][oi]
+                          const isSel=sel===letter, ok=submitted&&letter===q.correct, bad=submitted&&isSel&&!ok
+                          return <button key={oi} onClick={()=>!submitted&&setAnswers(a=>({...a,[i]:letter}))} disabled={submitted}
+                            className={`w-full text-left px-3 py-2 rounded-lg text-xs border transition-all ${ok?'border-cat-green bg-cat-green/10 text-cat-green':bad?'border-cat-red bg-cat-red/10 text-cat-red':isSel?'border-cat-blue bg-cat-blue/10 text-cat-blue':'border-border text-text-secondary hover:border-border-light disabled:opacity-60'}`}>{opt}</button>
+                        })}
+                      </div>
+                    )}
                     {submitted && (
                       <div className="bg-bg-secondary rounded-lg p-3 text-xs text-text-secondary">
                         <p className="font-semibold text-cat-green mb-1">Concept: {q.key_concept}</p>
                         <p className="leading-relaxed whitespace-pre-line">{q.solution}</p>
+                        {q._tier === 'official' && q.sourceUrl && <a href={q.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 mt-2 text-cat-blue hover:underline"><ExternalLink size={11}/> View on {q.source || 'source'}</a>}
                       </div>
                     )}
                   </Card>
@@ -266,7 +345,7 @@ function PYQSession({ topic, section, hasApiKey, onBack, onNavigate }) {
           ))}
 
           {!submitted && <button onClick={submit} disabled={Object.keys(answers).length===0} className="w-full py-3 bg-cat-blue text-white rounded-xl font-semibold disabled:opacity-40 transition-all">Submit</button>}
-          {submitted && <button onClick={generate} className="w-full py-3 bg-cat-blue text-white rounded-xl font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2"><RotateCcw size={14}/> More Questions</button>}
+          {submitted && <button onClick={() => tier==='official' ? loadOfficial() : tier==='verified' ? loadVerified() : generate()} className="w-full py-3 bg-cat-blue text-white rounded-xl font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2"><RotateCcw size={14}/> {tier==='ai' ? 'More AI Practice' : 'Retake'}</button>}
         </>
       )}
     </div>
@@ -287,7 +366,7 @@ export function PYQTopics({ hasApiKey, onNavigate }) {
 
   return (
     <div className="animate-fade-in max-w-3xl space-y-5">
-      <SectionHeader title="Topic-wise PYQs" subtitle="Practice previous year questions filtered by topic — see which year each concept appeared" />
+      <SectionHeader title="Topic-wise PYQs" subtitle="Authentic year-wise PYQs (imported), plus verified & AI practice — organised by topic" />
 
       <div className="flex gap-2 flex-wrap">
         {['All', ...Object.keys(SECTIONS)].map(s => (
@@ -311,7 +390,8 @@ export function PYQTopics({ hasApiKey, onNavigate }) {
                     <Badge variant={topic.priority===1?'red':topic.priority===2?'orange':'green'} className="text-[9px]">
                       {topic.priority===1?'P1':topic.priority===2?'P2':'P3'}
                     </Badge>
-                    {getPYQByTopic(topic.id).length > 0 && <Badge variant="blue" className="text-[9px]">✓ {getPYQByTopic(topic.id).length} PYQ</Badge>}
+                    {getOfficialByTopic(topic.id).length > 0 && <Badge variant="green" className="text-[9px]">★ {getOfficialByTopic(topic.id).length} real</Badge>}
+                    {getPYQByTopic(topic.id).length > 0 && <Badge variant="blue" className="text-[9px]">✓ {getPYQByTopic(topic.id).length} verified</Badge>}
                   </div>
                 </div>
                 <BookMarked size={13} className="text-text-muted group-hover:text-cat-blue flex-shrink-0" />

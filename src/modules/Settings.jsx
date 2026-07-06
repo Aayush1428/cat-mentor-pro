@@ -3,7 +3,8 @@ import { Card, SectionHeader, Badge, showToast } from '../components/ui/index.js
 import { testGroqConnection, testDeepseekConnection, clearAllCache } from '../utils/ai.js'
 import { clearPerformance } from '../utils/performance.js'
 import { downloadBackup, importBackup, readFileAsText } from '../utils/backup.js'
-import { Key, Zap, RotateCcw, Wifi, WifiOff, Trash2, CheckCircle, Download, Upload } from 'lucide-react'
+import { importOfficialPYQ, clearOfficialPYQ, getOfficialCount } from '../data/pyqOfficial.js'
+import { Key, Zap, RotateCcw, Wifi, WifiOff, Trash2, CheckCircle, Download, Upload, FileText } from 'lucide-react'
 
 const get = () => { try { return JSON.parse(localStorage.getItem('cat_settings') || '{}') } catch { return {} } }
 
@@ -26,7 +27,10 @@ export default function Settings({ onSave }) {
   const [saving, setSaving] = useState(false)
   const [testG, setTestG] = useState(null); const [testingG, setTestingG] = useState(false)
   const [testD, setTestD] = useState(null); const [testingD, setTestingD] = useState(false)
+  const [pyqText, setPyqText] = useState('')
+  const [pyqCount, setPyqCount] = useState(getOfficialCount())
   const fileRef = useRef(null)
+  const pyqFileRef = useRef(null)
 
   const doExport = () => {
     const n = downloadBackup({ includeCache: false })
@@ -89,6 +93,31 @@ export default function Settings({ onSave }) {
     } catch (e) { showToast('Cache clear failed: ' + e.message, 'error') }
   }
 
+  const importPYQ = (text) => {
+    try {
+      const { added, skipped, total } = importOfficialPYQ(text)
+      setPyqCount(total)
+      setPyqText('')
+      showToast(`Imported ${added} PYQs${skipped ? ` (${skipped} skipped)` : ''} · ${total} total`, 'success')
+    } catch (e) { showToast('Import failed: ' + e.message, 'error') }
+  }
+
+  const importPYQFromFile = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const text = await readFileAsText(file)
+      importPYQ(text)
+    } catch (err) { showToast('Import failed: ' + err.message, 'error') }
+    finally { if (pyqFileRef.current) pyqFileRef.current.value = '' }
+  }
+
+  const resetPYQ = () => {
+    clearOfficialPYQ()
+    setPyqCount(0)
+    showToast('Official PYQ bank cleared', 'success')
+  }
+
   const KeyInput = ({ label, sub, val, setVal, testing, testResult, onTest, placeholder }) => (
     <Card>
       <div className="flex items-center gap-2 mb-2">
@@ -131,6 +160,37 @@ export default function Settings({ onSave }) {
             <input type="password" value={newsApiKey} onChange={e => setNewsApiKey(e.target.value)} placeholder="newsapi key"
               className="w-full bg-bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-cat-blue transition-colors" />
           </div>
+        </div>
+      </Card>
+      <Card>
+        <div className="flex items-center gap-2 mb-1">
+          <FileText size={14} className="text-cat-green" />
+          <p className="text-sm font-semibold text-text-primary">Official PYQ Bank</p>
+          {pyqCount > 0 && <Badge variant="green">{pyqCount} loaded</Badge>}
+        </div>
+        <p className="text-xs text-text-secondary mb-3">
+          Add <span className="font-medium text-text-primary">real, verified</span> CAT previous-year questions so Topic-wise PYQs shows authentic, year-tagged questions instead of AI practice. Transcribe from verified public keys — 2IIM, Cracku, or Bodhee Prep — then paste the JSON array here or upload a file. See <span className="font-mono text-[11px] text-cat-blue">public/pyq-template.json</span> for the exact format.
+        </p>
+        <textarea
+          value={pyqText}
+          onChange={e => setPyqText(e.target.value)}
+          placeholder='[{"id":"cat2023_qa_s1_q12","year":2023,"slot":"Slot 1","sectionId":"QA","topicId":"qa_tsd","topic":"Time, Speed & Distance","type":"MCQ","question":"...","options":["A) ...","B) ...","C) ...","D) ..."],"correct":"A","solution":"...","source":"Cracku","verified":true}]'
+          rows={5}
+          className="w-full bg-bg-secondary border border-border rounded-lg px-3 py-2 text-xs font-mono text-text-primary placeholder-text-muted focus:outline-none focus:border-cat-blue transition-colors resize-y"
+        />
+        <div className="flex flex-wrap gap-2 mt-2">
+          <button onClick={() => importPYQ(pyqText)} disabled={!pyqText.trim()} className="px-3 py-2 rounded-lg bg-cat-green text-white text-xs font-semibold hover:opacity-90 disabled:opacity-40 transition-all flex items-center gap-1.5">
+            <Upload size={12}/> Import Pasted JSON
+          </button>
+          <button onClick={() => pyqFileRef.current?.click()} className="px-3 py-2 rounded-lg border border-cat-blue/30 text-xs text-cat-blue hover:bg-cat-blue/10 transition-all flex items-center gap-1.5">
+            <FileText size={12}/> Upload JSON File
+          </button>
+          <input ref={pyqFileRef} type="file" accept="application/json,.json" onChange={importPYQFromFile} className="hidden" />
+          {pyqCount > 0 && (
+            <button onClick={resetPYQ} className="px-3 py-2 rounded-lg border border-cat-red/30 text-xs text-cat-red hover:bg-cat-red/10 transition-all flex items-center gap-1.5">
+              <Trash2 size={12}/> Clear PYQ Bank
+            </button>
+          )}
         </div>
       </Card>
       <Card>
