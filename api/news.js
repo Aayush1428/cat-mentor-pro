@@ -24,7 +24,7 @@ const normalizeNewsData = (a) => ({
   id: a.article_id || a.link,
   title: a.title,
   summary: a.description || a.content || '',
-  source: a.source_id || 'NewsData',
+  source: a.source_name || a.source_id || 'NewsData',
   url: a.link,
   image: a.image_url || '',
   publishedAt: a.pubDate || '',
@@ -97,8 +97,12 @@ export default async function handler(req, res) {
 
       const r = await fetch(url.toString(), { method: 'GET' })
       const data = await r.json()
-      if (!r.ok || data?.status === 'error') {
-        return json(res, r.ok ? 400 : r.status, { error: data?.results?.message || data?.message || 'NewsData request failed' })
+      if (data?.status === 'error') {
+        const msg = data?.message || data?.results?.message || 'NewsData request failed'
+        return json(res, 400, { error: `NewsData: ${msg}` })
+      }
+      if (!r.ok) {
+        return json(res, r.status, { error: data?.message || `NewsData request failed (HTTP ${r.status})` })
       }
       return json(res, 200, { articles: (data.results || []).map(normalizeNewsData) })
     }
