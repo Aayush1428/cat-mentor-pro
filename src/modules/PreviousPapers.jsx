@@ -89,18 +89,47 @@ export function PreviousPapers() {
 // ─── Topic-wise PYQs Module ───────────────────────────────────────────────────
 const buildPYQPrompt = (topic, section, count) => `Generate ${count} Previous Year CAT questions (or CAT-style questions based on past patterns) on: "${topic}" from ${section} section.
 
-For each question, mention if it appeared in a specific CAT year if known, or indicate it's CAT-style.
+IMPORTANT: Organise the questions YEAR-WISE. Attribute each question to a specific CAT exam year (between 2015 and 2024) based on when this concept/pattern actually appeared. Spread them across multiple years where possible, and sort the array from the MOST RECENT year to the oldest.
 
-Return ONLY a JSON array:
+Return ONLY a JSON array (already sorted newest year first):
 [{
   "question": "complete question text",
   "options": ["A) ","B) ","C) ","D) "],
   "correct": "A|B|C|D",
   "solution": "complete step-by-step solution",
-  "year": "CAT 20XX Slot Y — or CAT-style based on 20XX patterns",
+  "year": "2024",
+  "slot": "Slot 2",
   "difficulty": "Easy|Medium|Hard",
   "key_concept": "the specific concept this question tests"
-}]`
+}]
+
+The "year" field MUST be a 4-digit year only (e.g. "2024"). Put the slot in the separate "slot" field.`
+
+// Extract a 4-digit year from any label the AI or bank returns.
+const extractYear = (raw) => {
+  const m = String(raw || '').match(/(19|20)\d{2}/)
+  return m ? m[0] : null
+}
+
+// Group questions under their CAT year, keeping each question's original index
+// so answer tracking and scoring stay correct. Real years sort newest-first;
+// verified/undated questions fall to the bottom.
+const groupByYear = (questions) => {
+  const groups = {}
+  questions.forEach((q, idx) => {
+    const yr = extractYear(q.year)
+    const key = yr ? `CAT ${yr}` : (q.year || 'CAT-style')
+    if (!groups[key]) groups[key] = { key, year: yr, items: [] }
+    groups[key].items.push({ q, idx })
+  })
+  return Object.values(groups).sort((a, b) => {
+    if (a.year && b.year) return Number(b.year) - Number(a.year)
+    if (a.year) return -1
+    if (b.year) return 1
+    return a.key.localeCompare(b.key)
+  })
+}
+
 
 function PYQSession({ topic, section, hasApiKey, onBack, onNavigate }) {
   const [count, setCount] = useState(5)
@@ -194,34 +223,47 @@ function PYQSession({ topic, section, hasApiKey, onBack, onNavigate }) {
             </Card>
           )}
 
-          {questions.map((q,i) => {
-            const sel = answers[i]
-            return (
-              <Card key={i}>
-                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  <span className="text-xs font-mono text-cat-blue font-bold">Q{i+1}</span>
-                  <Badge variant="gray">{q.year}</Badge>
-                  <Badge variant={q.difficulty==='Easy'?'green':q.difficulty==='Medium'?'orange':'red'}>{q.difficulty}</Badge>
-                  <div className="ml-auto"><BookmarkButton item={{ section: section.id, topic: topic.name, source: 'pyq', stem: q.question, options: q.options, answer: q.correct, explanation: q.solution }} /></div>
+          {groupByYear(questions).map(group => (
+            <div key={group.key} className="space-y-3">
+              <div className="flex items-center gap-2 pt-1">
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-cat-blue/10 border border-cat-blue/30">
+                  <FileText size={13} className="text-cat-blue" />
+                  <span className="text-xs font-bold text-cat-blue tracking-wide">{group.key}</span>
                 </div>
-                <p className="text-sm font-medium text-text-primary mb-3 leading-relaxed whitespace-pre-line">{q.question}</p>
-                <div className="space-y-1.5 mb-3">
-                  {q.options.map((opt,oi) => {
-                    const letter=['A','B','C','D'][oi]
-                    const isSel=sel===letter, ok=submitted&&letter===q.correct, bad=submitted&&isSel&&!ok
-                    return <button key={oi} onClick={()=>!submitted&&setAnswers(a=>({...a,[i]:letter}))} disabled={submitted}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs border transition-all ${ok?'border-cat-green bg-cat-green/10 text-cat-green':bad?'border-cat-red bg-cat-red/10 text-cat-red':isSel?'border-cat-blue bg-cat-blue/10 text-cat-blue':'border-border text-text-secondary hover:border-border-light disabled:opacity-60'}`}>{opt}</button>
-                  })}
-                </div>
-                {submitted && (
-                  <div className="bg-bg-secondary rounded-lg p-3 text-xs text-text-secondary">
-                    <p className="font-semibold text-cat-green mb-1">Concept: {q.key_concept}</p>
-                    <p className="leading-relaxed whitespace-pre-line">{q.solution}</p>
-                  </div>
-                )}
-              </Card>
-            )
-          })}
+                <span className="text-[10px] text-text-muted">{group.items.length} question{group.items.length > 1 ? 's' : ''}</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+
+              {group.items.map(({ q, idx: i }) => {
+                const sel = answers[i]
+                return (
+                  <Card key={i}>
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <span className="text-xs font-mono text-cat-blue font-bold">Q{i+1}</span>
+                      {q.slot && <Badge variant="gray">{q.slot}</Badge>}
+                      <Badge variant={q.difficulty==='Easy'?'green':q.difficulty==='Medium'?'orange':'red'}>{q.difficulty}</Badge>
+                      <div className="ml-auto"><BookmarkButton item={{ section: section.id, topic: topic.name, source: 'pyq', stem: q.question, options: q.options, answer: q.correct, explanation: q.solution }} /></div>
+                    </div>
+                    <p className="text-sm font-medium text-text-primary mb-3 leading-relaxed whitespace-pre-line">{q.question}</p>
+                    <div className="space-y-1.5 mb-3">
+                      {q.options.map((opt,oi) => {
+                        const letter=['A','B','C','D'][oi]
+                        const isSel=sel===letter, ok=submitted&&letter===q.correct, bad=submitted&&isSel&&!ok
+                        return <button key={oi} onClick={()=>!submitted&&setAnswers(a=>({...a,[i]:letter}))} disabled={submitted}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-xs border transition-all ${ok?'border-cat-green bg-cat-green/10 text-cat-green':bad?'border-cat-red bg-cat-red/10 text-cat-red':isSel?'border-cat-blue bg-cat-blue/10 text-cat-blue':'border-border text-text-secondary hover:border-border-light disabled:opacity-60'}`}>{opt}</button>
+                      })}
+                    </div>
+                    {submitted && (
+                      <div className="bg-bg-secondary rounded-lg p-3 text-xs text-text-secondary">
+                        <p className="font-semibold text-cat-green mb-1">Concept: {q.key_concept}</p>
+                        <p className="leading-relaxed whitespace-pre-line">{q.solution}</p>
+                      </div>
+                    )}
+                  </Card>
+                )
+              })}
+            </div>
+          ))}
 
           {!submitted && <button onClick={submit} disabled={Object.keys(answers).length===0} className="w-full py-3 bg-cat-blue text-white rounded-xl font-semibold disabled:opacity-40 transition-all">Submit</button>}
           {submitted && <button onClick={generate} className="w-full py-3 bg-cat-blue text-white rounded-xl font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2"><RotateCcw size={14}/> More Questions</button>}
