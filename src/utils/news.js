@@ -112,14 +112,24 @@ const withCache = async (key, loader) => {
 export const getNewsProviderStatus = () => {
   const s = getSettings()
   return {
+    hasNewsData: !!s.newsDataKey,
     hasNewsCatcher: !!s.newsCatcherKey,
     hasNewsApi: !!s.newsApiKey,
-    hasAnyIndianNewsKey: !!(s.newsCatcherKey || s.newsApiKey),
+    hasAnyIndianNewsKey: !!(s.newsDataKey || s.newsCatcherKey || s.newsApiKey),
   }
 }
 
 const readIndianFromPaidApis = async () => {
   const s = getSettings()
+  if (s.newsDataKey) {
+    return postProxy('newsdata', s.newsDataKey, {
+      query: INDIA_QUERY,
+      pageSize: 25,
+      domains: NEWS_DOMAINS,
+      country: 'in',
+      language: 'en',
+    })
+  }
   if (s.newsCatcherKey) {
     return postProxy('newscatcher', s.newsCatcherKey, {
       query: INDIA_QUERY,
@@ -142,6 +152,16 @@ const readIndianFromPaidApis = async () => {
 
 const readFinanceFromPaidApis = async () => {
   const s = getSettings()
+  if (s.newsDataKey) {
+    return postProxy('newsdata', s.newsDataKey, {
+      query: MARKET_QUERY,
+      pageSize: 25,
+      domains: NEWS_DOMAINS,
+      country: 'in',
+      language: 'en',
+      category: 'business',
+    })
+  }
   if (s.newsCatcherKey) {
     return postProxy('newscatcher', s.newsCatcherKey, {
       query: MARKET_QUERY,

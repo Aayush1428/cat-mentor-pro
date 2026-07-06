@@ -20,6 +20,16 @@ const normalizeNewsCatcher = (a) => ({
   publishedAt: a.published_date || a.publishedAt || '',
 })
 
+const normalizeNewsData = (a) => ({
+  id: a.article_id || a.link,
+  title: a.title,
+  summary: a.description || a.content || '',
+  source: a.source_id || 'NewsData',
+  url: a.link,
+  image: a.image_url || '',
+  publishedAt: a.pubDate || '',
+})
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' })
 
@@ -74,6 +84,23 @@ export default async function handler(req, res) {
       const data = await r.json()
       if (!r.ok) return json(res, r.status, { error: data?.message || 'NewsCatcher request failed' })
       return json(res, 200, { articles: (data.articles || []).map(normalizeNewsCatcher) })
+    }
+
+    if (provider === 'newsdata') {
+      const url = new URL('https://newsdata.io/api/1/news')
+      url.searchParams.set('apikey', apiKey)
+      url.searchParams.set('q', query || 'India')
+      url.searchParams.set('language', language)
+      url.searchParams.set('country', String(country || 'in').toLowerCase())
+      if (domains) url.searchParams.set('domainurl', domains)
+      if (category) url.searchParams.set('category', category)
+
+      const r = await fetch(url.toString(), { method: 'GET' })
+      const data = await r.json()
+      if (!r.ok || data?.status === 'error') {
+        return json(res, r.ok ? 400 : r.status, { error: data?.results?.message || data?.message || 'NewsData request failed' })
+      }
+      return json(res, 200, { articles: (data.results || []).map(normalizeNewsData) })
     }
 
     return json(res, 400, { error: 'Unsupported provider' })

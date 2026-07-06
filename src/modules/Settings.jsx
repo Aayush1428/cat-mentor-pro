@@ -17,6 +17,7 @@ export default function Settings({ onSave }) {
   const saved = get()
   const [groqKey, setGroqKey] = useState(saved.groqKey || '')
   const [deepseekKey, setDeepseekKey] = useState(saved.deepseekKey || '')
+  const [newsDataKey, setNewsDataKey] = useState(saved.newsDataKey || '')
   const [newsCatcherKey, setNewsCatcherKey] = useState(saved.newsCatcherKey || '')
   const [newsApiKey, setNewsApiKey] = useState(saved.newsApiKey || '')
   const [preferred, setPreferred] = useState(saved.preferredProvider || 'groq')
@@ -49,6 +50,7 @@ export default function Settings({ onSave }) {
     localStorage.setItem('cat_settings', JSON.stringify({
       groqKey,
       deepseekKey,
+      newsDataKey,
       newsCatcherKey,
       newsApiKey,
       preferredProvider: preferred,
@@ -101,8 +103,13 @@ export default function Settings({ onSave }) {
       <KeyInput label="DeepSeek API Key" sub="Get key at platform.deepseek.com — deep reasoning, great for explanations" val={deepseekKey} setVal={setDeepseekKey} testing={testingD} testResult={testD} onTest={doTestDeepseek} placeholder="sk-..." />
       <Card>
         <p className="text-sm font-semibold text-text-primary mb-2">News Feed Providers</p>
-        <p className="text-xs text-text-secondary mb-3">For Times of India / Economic Times / Hindustan Times / finance aggregation, add at least one key below.</p>
+        <p className="text-xs text-text-secondary mb-3">For Times of India / Economic Times / Hindustan Times / finance aggregation, add at least one key below (NewsData is recommended).</p>
         <div className="space-y-3">
+          <div>
+            <p className="text-xs text-text-muted mb-1">NewsData API Key</p>
+            <input type="password" value={newsDataKey} onChange={e => setNewsDataKey(e.target.value)} placeholder="pub_..."
+              className="w-full bg-bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-cat-blue transition-colors" />
+          </div>
           <div>
             <p className="text-xs text-text-muted mb-1">NewsCatcher API Key</p>
             <input type="password" value={newsCatcherKey} onChange={e => setNewsCatcherKey(e.target.value)} placeholder="newscatcher key"
