@@ -45,7 +45,7 @@ const sortByDateDesc = (items) =>
 
 const sanitizeHeader = (val) => {
   if (!val) return ''
-  return String(val).replace(/[^\x00-\x7F]/g, '?')
+  return String(val).replace(/[^\x00-\x7F]/g, '').trim()
 }
 
 const postProxy = async (provider, key, payload) => {
