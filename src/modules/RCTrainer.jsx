@@ -7,14 +7,14 @@ import { addCard } from '../utils/srs.js'
 import { Languages, Sparkles, RotateCcw, Target, Lightbulb, ChevronRight, Plus, Eye, BookOpen, Wand2, Clock } from 'lucide-react'
 
 // ─── Prompts ──────────────────────────────────────────────────────────────────
-const SYSTEM = `You are a CAT VARC expert and a bilingual English–Hindi reading coach who trains Hindi-speaking aspirants to top Reading Comprehension. You explain English passages line by line in simple Hindi, teach passage-cracking techniques, and design authentic CAT-level questions. Return ONLY valid JSON, no markdown, no preamble.`
+const SYSTEM = `You are a CAT VARC expert and a bilingual reading coach who trains Hindi-speaking aspirants to top Reading Comprehension. Whenever you explain in "Hindi", use natural conversational HINGLISH — Hindi written in Roman/English script and freely mixed with common English words, exactly the way friends talk while explaining (e.g. "Author yahan basically ye keh raha hai ki economy slow ho rahi hai"). Do NOT use formal or pure Devanagari Hindi and do NOT translate technical/common English words unnecessarily. You explain English passages line by line in this casual Hinglish, teach passage-cracking techniques, and design authentic CAT-level questions. Return ONLY valid JSON, no markdown, no preamble.`
 
 const WORD_SYSTEM = `You are a bilingual English–Hindi vocabulary coach for CAT aspirants. Return ONLY valid JSON, no markdown.`
 
 const buildWordPrompt = (word) => `For the English word "${word}" as used in academic reading, return ONLY this JSON:
-{"word":"${word}","pos":"part of speech","meaning":"clear simple English meaning","hindi":"meaning in Hindi (Devanagari)","synonyms":["syn1","syn2"],"example":"one short example sentence using the word"}`
+{"word":"${word}","pos":"part of speech","meaning":"clear simple English meaning","hindi":"matlab casual Hinglish mein, Roman script (e.g. 'iska matlab hota hai...')","synonyms":["syn1","syn2"],"example":"one short example sentence using the word"}`
 
-const buildDecodePrompt = (passage, questions) => `A CAT aspirant wants to FULLY understand this Reading Comprehension passage in Hindi, then master its questions.
+const buildDecodePrompt = (passage, questions) => `A CAT aspirant wants to FULLY understand this Reading Comprehension passage in casual Hinglish, then master its questions.
 
 PASSAGE:
 """${passage}"""
@@ -29,11 +29,11 @@ Return ONLY this JSON:
   "passage_type": "genre + style, e.g. 'Abstract – Philosophy' or 'Argumentative – Economics'",
   "difficulty": "Easy|Medium|Hard",
   "theme": "one-sentence central idea (English)",
-  "theme_hindi": "central idea explained simply in Hindi",
+  "theme_hindi": "central idea casual Hinglish mein samjhaya (Roman script, jaise dost samjhata hai)",
   "tone": "author's tone in 1-3 words (e.g. critical, analytical, optimistic)",
   "purpose": "why the author wrote this, one line (English)",
   "structure": "how the passage is organised, paragraph by paragraph, short (English)",
-  "hard_words": [{"word": "difficult word from passage", "meaning": "English meaning", "hindi": "Hindi meaning"}],
+  "hard_words": [{"word": "difficult word from passage", "meaning": "English meaning", "hindi": "matlab casual Hinglish mein (Roman script)"}],
   "tips": ["technique to crack THIS type of passage", "another technique"],
   "elimination": ["how to spot and reject trap options in this passage type", "another elimination cue"],
   "questions": [
@@ -50,7 +50,7 @@ Return ONLY this JSON:
   "passage_type": "genre + style",
   "difficulty": "${difficulty}",
   "theme": "one-sentence central idea (English)",
-  "theme_hindi": "central idea in Hindi",
+  "theme_hindi": "central idea casual Hinglish mein (Roman script)",
   "tone": "author's tone in 1-3 words",
   "purpose": "author's purpose, one line",
   "structure": "how the passage is organised, short",
@@ -63,8 +63,8 @@ Return ONLY this JSON:
 }
 Provide EXACTLY 4 questions.`
 
-const buildLinesPrompt = (passage) => `Explain this passage to a Hindi-speaking CAT aspirant, sentence by sentence. Return ONLY this JSON:
-{"lines":[{"text":"the exact sentence","hindi":"what it conveys in simple Hindi","gist":"short English gist"}]}
+const buildLinesPrompt = (passage) => `Explain this passage to a Hindi-speaking CAT aspirant, sentence by sentence, in casual conversational HINGLISH (Hindi in Roman/English script mixed with English words — jaise ek dost line-by-line samjhata hai, e.g. "Yahan author ye point bana raha hai ki..."). Do NOT use pure Devanagari Hindi. Return ONLY this JSON:
+{"lines":[{"text":"the exact sentence","hindi":"what it conveys in casual Hinglish (Roman script)","gist":"short English gist"}]}
 Cover EVERY sentence in order.
 PASSAGE:
 """${passage}"""`
@@ -123,7 +123,7 @@ function useWordLookup(hasApiKey) {
     const x = e.clientX, y = e.clientY
     setPop({ word, x, y, loading: true, data: null })
     try {
-      const d = await getCachedContent(`word_${word.toLowerCase()}`, WORD_SYSTEM, buildWordPrompt(word), 300)
+      const d = await getCachedContent(`wordhi_${word.toLowerCase()}`, WORD_SYSTEM, buildWordPrompt(word), 300)
       setPop(p => (p && p.word === word ? { ...p, loading: false, data: d } : p))
     } catch (err) {
       setPop(p => (p && p.word === word ? { ...p, loading: false, error: err.message } : p))
@@ -347,10 +347,10 @@ function PassageStudio({ data, hasApiKey, source, onFinish }) {
 
   const explainHindi = async () => {
     if (lines?.length) { setShowLines(true); return }
-    if (!hasApiKey) { showToast('Add an API key in Settings to unlock Hindi explanations', 'info'); return }
+    if (!hasApiKey) { showToast('Add an API key in Settings to unlock Hinglish explanations', 'info'); return }
     setLinesLoading(true)
     try {
-      const d = await getCachedContent(`rclines_${makeId(data.passage)}`, SYSTEM, buildLinesPrompt(data.passage), 4000)
+      const d = await getCachedContent(`rclineshi_${makeId(data.passage)}`, SYSTEM, buildLinesPrompt(data.passage), 4000)
       setLines(d.lines || []); setShowLines(true)
     } catch (e) { showToast('Error: ' + e.message, 'error') }
     finally { setLinesLoading(false) }
@@ -384,7 +384,7 @@ function PassageStudio({ data, hasApiKey, source, onFinish }) {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1 text-xs text-text-muted"><Clock size={11} /><TimerDisplay seconds={sec} /></div>
             <button onClick={explainHindi} disabled={linesLoading} className="flex items-center gap-1 px-2.5 py-1.5 bg-cat-purple/10 text-cat-purple border border-cat-purple/30 rounded-lg text-[11px] font-semibold hover:bg-cat-purple/20 transition-all disabled:opacity-50">
-              <Languages size={12} />{linesLoading ? 'Explaining…' : showLines ? 'हिंदी ✓' : 'Explain in Hindi'}
+              <Languages size={12} />{linesLoading ? 'Explaining…' : showLines ? 'Hinglish ✓' : 'Explain in Hinglish'}
             </button>
           </div>
         </div>
@@ -539,7 +539,7 @@ function Daily5Tab({ hasApiKey, onNavigate }) {
       {selected === null && !loading && (
         <Card className="text-center py-8">
           <BookOpen size={28} className="mx-auto text-text-muted mb-2" />
-          <p className="text-sm text-text-secondary">Pick a passage above to start. Read it, understand it in Hindi, then solve.</p>
+          <p className="text-sm text-text-secondary">Pick a passage above to start. Read it, understand it in Hinglish, then solve.</p>
         </Card>
       )}
     </div>
@@ -556,7 +556,7 @@ export default function RCTrainer({ hasApiKey, onNavigate }) {
   const [tab, setTab] = useState('daily5')
   return (
     <div className="animate-fade-in max-w-3xl">
-      <SectionHeader title="RC Comprehension Trainer" subtitle="Understand every passage in Hindi, learn cracking techniques, then master CAT-level questions" />
+      <SectionHeader title="RC Comprehension Trainer" subtitle="Understand every passage in easy Hinglish, learn cracking techniques, then master CAT-level questions" />
       <div className="flex flex-wrap gap-2 mb-5">
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
