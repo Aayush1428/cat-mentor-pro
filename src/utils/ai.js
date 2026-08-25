@@ -32,16 +32,29 @@ const friendlyError = (provider, status, rawMsg) => {
 
 const callProvider = async (provider, apiKey, messages, maxTokens) => {
   const endpoint = provider === 'groq' ? '/api/groq' : '/api/deepseek'
-  const model = provider === 'groq' ? 'llama-3.3-70b-versatile' : 'deepseek-chat'
+  const model = provider === 'groq' ? 'openai/gpt-oss-120b' : 'deepseek-chat'
   const cleanKey = sanitizeHeader(apiKey).trim()
   if (!cleanKey) throw new Error(`No ${PROVIDER_LABEL[provider] || provider} API key configured`)
+  const body = { model, messages, max_tokens: maxTokens, temperature: 0.2 }
+  // gpt-oss is a reasoning model — keep reasoning-token overhead low so it doesn't eat the budget.
+  if (provider === 'groq') body.reasoning_effort = 'low'
   try {
     const r = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${cleanKey}` },
-      body: JSON.stringify({ model, messages, max_tokens: maxTokens, temperature: 0.2 }),
+      body: JSON.stringify(body),
     })
-    const data = await r.json()
+    const rawBody = await r.text()
+    let data
+    try { data = rawBody ? JSON.parse(rawBody) : {} }
+    catch {
+      // Non-JSON reply (usually index.html) means the /api proxy isn't serving this route.
+      const name = PROVIDER_LABEL[provider] || provider
+      if (r.status === 404 || /<!doctype html|<html/i.test(rawBody)) {
+        throw new Error(`${name}: the /api proxy isn't reachable, so the request never hit ${name}. Run "npm run dev", or deploy to Vercel — a plain static server won't proxy /api.`)
+      }
+      throw new Error(`${name}: unexpected non-JSON response (HTTP ${r.status}).`)
+    }
     if (data.error || !r.ok) throw new Error(friendlyError(provider, r.status, data.error?.message || data.error))
     const text = data.choices?.[0]?.message?.content
     if (!text) throw new Error(`${PROVIDER_LABEL[provider] || provider}: empty response`)
@@ -96,5 +109,5 @@ export const getCachedContent = async (key, system, user, maxTokens = 2000) => {
 export const clearCache = (key) => localStorage.removeItem(`cat_cache_${key.replace(/[\s/\\'"]/g, '_').toLowerCase()}`)
 export const clearAllCache = () => Object.keys(localStorage).filter(k => k.startsWith('cat_cache_')).forEach(k => localStorage.removeItem(k))
 
-export const testGroqConnection = async (k) => { await callProvider('groq', k, [{ role: 'user', content: 'Say OK' }], 10); return true }
+export const testGroqConnection = async (k) => { await callProvider('groq', k, [{ role: 'user', content: 'Say OK' }], 64); return true }
 export const testDeepseekConnection = async (k) => { await callProvider('deepseek', k, [{ role: 'user', content: 'Say OK' }], 10); return true }

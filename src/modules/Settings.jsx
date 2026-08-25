@@ -70,7 +70,7 @@ export default function Settings({ onSave }) {
     if (!groqKey.trim()) { showToast('Enter Groq key first', 'error'); return }
     setTestingG(true); setTestG(null)
     try { await testGroqConnection(groqKey.trim()); setTestG('ok'); showToast('Groq connected ✓', 'success') }
-    catch { setTestG('err'); showToast('Groq connection failed', 'error') }
+    catch (e) { setTestG('err'); showToast(e.message || 'Groq connection failed', 'error') }
     finally { setTestingG(false) }
   }
 
@@ -78,7 +78,7 @@ export default function Settings({ onSave }) {
     if (!deepseekKey.trim()) { showToast('Enter DeepSeek key first', 'error'); return }
     setTestingD(true); setTestD(null)
     try { await testDeepseekConnection(deepseekKey.trim()); setTestD('ok'); showToast('DeepSeek connected ✓', 'success') }
-    catch { setTestD('err'); showToast('DeepSeek connection failed', 'error') }
+    catch (e) { setTestD('err'); showToast(e.message || 'DeepSeek connection failed', 'error') }
     finally { setTestingD(false) }
   }
 
@@ -139,7 +139,7 @@ export default function Settings({ onSave }) {
   return (
     <div className="max-w-2xl space-y-4 animate-fade-in">
       <SectionHeader title="Settings" subtitle="Configure AI providers, news feeds and learning preferences" />
-      <KeyInput label="Groq API Key" sub="Free tier available — get key at console.groq.com (Llama 3.3 70B, fastest)" val={groqKey} setVal={setGroqKey} testing={testingG} testResult={testG} onTest={doTestGroq} placeholder="gsk_..." />
+      <KeyInput label="Groq API Key" sub="Free tier available — get key at console.groq.com (GPT-OSS 120B, fastest)" val={groqKey} setVal={setGroqKey} testing={testingG} testResult={testG} onTest={doTestGroq} placeholder="gsk_..." />
       <KeyInput label="DeepSeek API Key" sub="Get key at platform.deepseek.com — deep reasoning, great for explanations" val={deepseekKey} setVal={setDeepseekKey} testing={testingD} testResult={testD} onTest={doTestDeepseek} placeholder="sk-..." />
       <Card>
         <p className="text-sm font-semibold text-text-primary mb-2">News Feed Providers</p>

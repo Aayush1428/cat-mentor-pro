@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
-import { LayoutDashboard, BookOpen, Brain, Calculator, FileText, BarChart3, Lightbulb, MessageSquare, Settings, ChevronLeft, ChevronRight, BookMarked, Trophy, CalendarCheck, Repeat, Newspaper } from 'lucide-react'
+import { LayoutDashboard, BookOpen, Brain, Calculator, FileText, BarChart3, Lightbulb, MessageSquare, Settings, ChevronLeft, ChevronRight, BookMarked, Trophy, CalendarCheck, Repeat, Newspaper, Languages } from 'lucide-react'
 
 const NAV = [
   { id: 'dashboard',   icon: LayoutDashboard, label: 'Dashboard' },
   { id: 'planner',     icon: CalendarCheck,    label: 'Study Planner' },
   { id: 'analysis',    icon: BarChart3,        label: 'My Analysis' },
   { id: 'varc',        icon: BookOpen,         label: 'VARC' },
+  { id: 'rc_trainer',  icon: Languages,        label: 'RC Trainer' },
   { id: 'dilr',        icon: Brain,            label: 'DILR' },
   { id: 'quant',       icon: Calculator,       label: 'Quantitative' },
   { id: 'news',        icon: Newspaper,        label: 'Daily News' },

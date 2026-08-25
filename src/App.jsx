@@ -6,6 +6,7 @@ import { ToastContainer } from './components/ui/index.jsx'
 import Dashboard from './modules/Dashboard.jsx'
 import Analysis from './modules/Analysis.jsx'
 import VARC from './modules/VARC.jsx'
+import RCTrainer from './modules/RCTrainer.jsx'
 import DILR from './modules/DILR.jsx'
 import Quant from './modules/Quant.jsx'
 import NewsHub from './modules/NewsHub.jsx'
@@ -65,6 +66,7 @@ export default function App() {
       case 'planner':    return <StudyPlanner {...props} />
       case 'analysis':   return <Analysis />
       case 'varc':       return <VARC {...props} />
+      case 'rc_trainer': return <RCTrainer {...props} />
       case 'dilr':       return <DILR {...props} />
       case 'quant':      return <Quant {...props} />
       case 'news':       return <NewsHub {...props} />
