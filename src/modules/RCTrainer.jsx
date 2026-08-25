@@ -114,7 +114,27 @@ const buildDailyPlan = () => {
 
 const DIFF_VARIANT = { Easy: 'green', Medium: 'orange', Hard: 'red' }
 
-// ─── Word lookup popover ──────────────────────────────────────────────────────
+// ─── Playbook: auto-collected tips & elimination techniques ───────────────
+const PLAYBOOK_KEY = 'cat_rc_playbook'
+const loadPlaybook = () => {
+  try { const p = JSON.parse(localStorage.getItem(PLAYBOOK_KEY) || '{}'); return { tips: p.tips || [], elimination: p.elimination || [] } }
+  catch { return { tips: [], elimination: [] } }
+}
+const savePlaybook = (pb) => localStorage.setItem(PLAYBOOK_KEY, JSON.stringify(pb))
+// Merge new tips into the playbook, de-duplicated (case-insensitive), keeping the most recent 300.
+const addToPlaybook = (tips, elimination) => {
+  const pb = loadPlaybook()
+  const merge = (existing, incoming) => {
+    const seen = new Set(existing.map(x => x.toLowerCase()))
+    ;(incoming || []).map(t => String(t).trim()).filter(Boolean).forEach(t => {
+      if (!seen.has(t.toLowerCase())) { existing.push(t); seen.add(t.toLowerCase()) }
+    })
+    return existing.slice(-300)
+  }
+  savePlaybook({ tips: merge(pb.tips, tips), elimination: merge(pb.elimination, elimination) })
+}
+
+// ─── Word lookup popover ─────────────────────────────────────────────────────
 function useWordLookup(hasApiKey) {
   const [pop, setPop] = useState(null) // { word, x, y, loading, data, error }
 
@@ -232,6 +252,7 @@ function TipsBlock({ tips, elimination }) {
           <ul className="space-y-1">{elimination.map((t, i) => <li key={i} className="text-xs text-text-secondary leading-relaxed flex gap-1.5"><span className="text-cat-red">•</span>{t}</li>)}</ul>
         </div>
       )}
+      <p className="text-[10px] text-text-muted flex items-center gap-1 pt-0.5"><BookOpen size={10} /> Saved to your Playbook — revise every technique in the Playbook tab</p>
     </Card>
   )
 }
@@ -337,6 +358,7 @@ function PassageStudio({ data, hasApiKey, source, onFinish }) {
   useEffect(() => {
     setLines(data.lines || null); setShowLines(!!data.lines); setRevealed(false)
     setAnswers({}); setSubmitted(false); setSec(0)
+    addToPlaybook(data.tips, data.elimination)
     clearInterval(timerRef.current)
     timerRef.current = setInterval(() => setSec(s => s + 1), 1000)
     return () => clearInterval(timerRef.current)
@@ -546,10 +568,58 @@ function Daily5Tab({ hasApiKey, onNavigate }) {
   )
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+// ─── Playbook tab (saved tips & techniques) ─────────────────────────────
+function PlaybookTab() {
+  const [pb, setPb] = useState(loadPlaybook)
+  const clear = () => {
+    if (!window.confirm('Clear all saved tips and techniques from your Playbook?')) return
+    savePlaybook({ tips: [], elimination: [] }); setPb({ tips: [], elimination: [] })
+    showToast('Playbook cleared', 'info')
+  }
+  const total = pb.tips.length + pb.elimination.length
+  if (total === 0) {
+    return (
+      <Card className="text-center py-10">
+        <BookOpen size={28} className="mx-auto text-text-muted mb-2" />
+        <p className="text-sm text-text-secondary">Your Playbook is empty.</p>
+        <p className="text-xs text-text-muted mt-1 max-w-md mx-auto leading-relaxed">Practise a passage in Daily 5 or Decode — every tip and elimination technique is collected here automatically, so you can revise them all before you start solving.</p>
+      </Card>
+    )
+  }
+  return (
+    <div className="space-y-4">
+      <Card className="bg-cat-orange/5 border-cat-orange/20">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <p className="text-sm font-semibold text-text-primary">Your RC Playbook</p>
+            <p className="text-xs text-text-muted mt-0.5">{total} techniques collected from your practice · read these before every passage</p>
+          </div>
+          <button onClick={clear} className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-cat-red border border-cat-red/30 rounded-lg hover:bg-cat-red/10 transition-all">
+            <RotateCcw size={12} /> Clear
+          </button>
+        </div>
+      </Card>
+      {pb.tips.length > 0 && (
+        <Card>
+          <p className="text-[11px] font-semibold text-cat-orange uppercase tracking-wider mb-2 flex items-center gap-1"><Lightbulb size={12} /> How to Crack Passages ({pb.tips.length})</p>
+          <ul className="space-y-1.5">{pb.tips.map((t, i) => <li key={i} className="text-xs text-text-secondary leading-relaxed flex gap-1.5"><span className="text-cat-orange">•</span>{t}</li>)}</ul>
+        </Card>
+      )}
+      {pb.elimination.length > 0 && (
+        <Card>
+          <p className="text-[11px] font-semibold text-cat-red uppercase tracking-wider mb-2 flex items-center gap-1"><Target size={12} /> Eliminating Trap Options ({pb.elimination.length})</p>
+          <ul className="space-y-1.5">{pb.elimination.map((t, i) => <li key={i} className="text-xs text-text-secondary leading-relaxed flex gap-1.5"><span className="text-cat-red">•</span>{t}</li>)}</ul>
+        </Card>
+      )}
+    </div>
+  )
+}
+
+// ─── Main ──────────────────────────────────────────────────────
 const TABS = [
   { id: 'daily5', label: '🎯 Daily 5' },
   { id: 'decode', label: '📝 Decode a Passage' },
+  { id: 'playbook', label: '📚 Playbook' },
 ]
 
 export default function RCTrainer({ hasApiKey, onNavigate }) {
@@ -567,6 +637,7 @@ export default function RCTrainer({ hasApiKey, onNavigate }) {
       </div>
       {tab === 'daily5' && <Daily5Tab hasApiKey={hasApiKey} onNavigate={onNavigate} />}
       {tab === 'decode' && <DecodeTab hasApiKey={hasApiKey} onNavigate={onNavigate} />}
+      {tab === 'playbook' && <PlaybookTab />}
     </div>
   )
 }
