@@ -6,7 +6,8 @@ const parseJSON = (raw) => {
     const s = clean.search(/[{\[]/)
     const e = Math.max(clean.lastIndexOf('}'), clean.lastIndexOf(']'))
     if (s === -1) throw new Error('Invalid JSON')
-    return JSON.parse(clean.substring(s, e + 1))
+    try { return JSON.parse(clean.substring(s, e + 1)) }
+    catch { throw new Error('the AI response was cut off before it finished (too long). Try again, or use a shorter passage.') }
   }
 }
 

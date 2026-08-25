@@ -33,17 +33,13 @@ Return ONLY this JSON:
   "tone": "author's tone in 1-3 words (e.g. critical, analytical, optimistic)",
   "purpose": "why the author wrote this, one line (English)",
   "structure": "how the passage is organised, paragraph by paragraph, short (English)",
-  "lines": [
-    {"text": "the exact sentence from the passage", "hindi": "what this line conveys, explained simply in Hindi", "gist": "3-6 word English gist"}
-  ],
   "hard_words": [{"word": "difficult word from passage", "meaning": "English meaning", "hindi": "Hindi meaning"}],
   "tips": ["technique to crack THIS type of passage", "another technique"],
   "elimination": ["how to spot and reject trap options in this passage type", "another elimination cue"],
   "questions": [
     {"q": "question", "options": ["A) ..","B) ..","C) ..","D) .."], "correct": "A|B|C|D", "type": "Main Idea|Inference|Tone|Vocabulary in Context|Detail", "explanation": "why the correct option is right (English)", "option_analysis": {"A": "why A is right or wrong", "B": "why B is right or wrong", "C": "why C is right or wrong", "D": "why D is right or wrong"}}
   ]
-}
-IMPORTANT: "lines" MUST cover EVERY sentence of the passage, one entry per sentence, in order.`
+}`
 
 const buildSlotPrompt = (difficulty, genre, focus) => `Generate ONE authentic CAT Reading Comprehension passage with questions for daily practice.
 Genre: ${genre}. Difficulty: ${difficulty}.${focus ? ` Emphasise ${focus}-type questions — the aspirant is weak there.` : ''}
@@ -354,7 +350,7 @@ function PassageStudio({ data, hasApiKey, source, onFinish }) {
     if (!hasApiKey) { showToast('Add an API key in Settings to unlock Hindi explanations', 'info'); return }
     setLinesLoading(true)
     try {
-      const d = await getCachedContent(`rclines_${makeId(data.passage)}`, SYSTEM, buildLinesPrompt(data.passage), 3000)
+      const d = await getCachedContent(`rclines_${makeId(data.passage)}`, SYSTEM, buildLinesPrompt(data.passage), 4000)
       setLines(d.lines || []); setShowLines(true)
     } catch (e) { showToast('Error: ' + e.message, 'error') }
     finally { setLinesLoading(false) }
@@ -444,7 +440,7 @@ function DecodeTab({ hasApiKey, onNavigate }) {
     if (passage.trim().length < 80) { showToast('Paste a longer passage (at least a paragraph)', 'info'); return }
     setLoading(true); setData(null)
     try {
-      const d = await callAI(SYSTEM, buildDecodePrompt(passage, questions), 4000)
+      const d = await callAI(SYSTEM, buildDecodePrompt(passage, questions), 3000)
       setData({ ...d, passage })
     } catch (e) { showToast('Error: ' + e.message, 'error') }
     finally { setLoading(false) }
@@ -492,7 +488,7 @@ function Daily5Tab({ hasApiKey, onNavigate }) {
     setLoading(true)
     try {
       const p = plan[i]
-      const d = await getCachedContent(`rc5_${today()}_${i}`, SYSTEM, buildSlotPrompt(p.difficulty, p.genre, p.focus), 3500)
+      const d = await getCachedContent(`rc5_${today()}_${i}`, SYSTEM, buildSlotPrompt(p.difficulty, p.genre, p.focus), 4000)
       setSlot(d)
     } catch (e) { showToast('Error: ' + e.message, 'error') }
     finally { setLoading(false) }
