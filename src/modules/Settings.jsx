@@ -207,7 +207,8 @@ export default function Settings({ onSave }) {
       </Card>
       <Card>
         <p className="text-sm font-semibold text-text-primary mb-1">Data Management</p>
-        <p className="text-xs text-text-secondary mb-3">Your progress lives in this browser only. Export a backup regularly so you never lose it — then import it on any device to continue.</p>
+        <p className="text-xs text-text-secondary mb-1">Your progress lives in this browser only. Export a backup regularly so you never lose it — then import it on any device to continue.</p>
+        <p className="text-[11px] text-text-muted mb-3">Includes analytics, vocab deck, mock history, bookmarks, and your RC saved passages &amp; Playbook. Only the regenerable AI cache is left out.</p>
         <div className="flex flex-wrap gap-3 mb-3">
           <button onClick={doExport} className="px-3 py-2 rounded-lg border border-cat-green/30 text-xs text-cat-green hover:bg-cat-green/10 transition-all flex items-center gap-1.5">
             <Download size={12}/> Export Progress
