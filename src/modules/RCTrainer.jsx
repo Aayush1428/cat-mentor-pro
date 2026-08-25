@@ -4,7 +4,7 @@ import { callAI, getCachedContent } from '../utils/ai.js'
 import { recordAttempt, getTopicStats } from '../utils/performance.js'
 import { logResult, makeId } from '../utils/bookmarks.js'
 import { addCard } from '../utils/srs.js'
-import { Languages, Sparkles, RotateCcw, Target, Lightbulb, ChevronRight, Plus, Eye, BookOpen, Wand2, Clock } from 'lucide-react'
+import { Languages, Sparkles, RotateCcw, Target, Lightbulb, ChevronRight, Plus, Eye, BookOpen, Wand2, Clock, Star, Calendar, ArrowLeft } from 'lucide-react'
 
 // ─── Prompts ──────────────────────────────────────────────────────────────────
 const SYSTEM = `You are a CAT VARC expert and a bilingual reading coach who trains Hindi-speaking aspirants to top Reading Comprehension. Whenever you explain in "Hindi", use natural conversational HINGLISH — Hindi written in Roman/English script and freely mixed with common English words, exactly the way friends talk while explaining (e.g. "Author yahan basically ye keh raha hai ki economy slow ho rahi hai"). Do NOT use formal or pure Devanagari Hindi and do NOT translate technical/common English words unnecessarily. You explain English passages line by line in this casual Hinglish, teach passage-cracking techniques, and design authentic CAT-level questions. Return ONLY valid JSON, no markdown, no preamble.`
@@ -134,7 +134,39 @@ const addToPlaybook = (tips, elimination) => {
   savePlaybook({ tips: merge(pb.tips, tips), elimination: merge(pb.elimination, elimination) })
 }
 
-// ─── Word lookup popover ─────────────────────────────────────────────────────
+// ─── Passage history (browse by date, save, mark solved) ──────────────────
+const pad2 = (n) => String(n).padStart(2, '0')
+const isoDay = (d = new Date()) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
+const prettyDay = (iso) => { const [y, m, dd] = iso.split('-').map(Number); return new Date(y, m - 1, dd).toDateString() }
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const shortDay = (iso) => { const [, m, dd] = iso.split('-').map(Number); return `${MONTHS[m - 1]} ${dd}` }
+
+const HISTORY_KEY = 'cat_rc_history'
+const loadHistory = () => { try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '{}') } catch { return {} } }
+const saveHistory = (h) => localStorage.setItem(HISTORY_KEY, JSON.stringify(h))
+// Keep the most recent `keep` days, but never drop a day that holds a saved passage.
+const pruneHistory = (h, keep = 60) => {
+  const removable = Object.keys(h).sort().filter(d => !Object.values(h[d] || {}).some(e => e.saved))
+  let i = 0
+  while (Object.keys(h).length > keep && i < removable.length) delete h[removable[i++]]
+  return h
+}
+const recordPassage = (dateStr, slot, data, source) => {
+  const h = loadHistory()
+  const day = h[dateStr] || {}
+  const prev = day[slot] || {}
+  day[slot] = { ...prev, slot, date: dateStr, source: prev.source || source, data }
+  h[dateStr] = day
+  saveHistory(pruneHistory(h))
+}
+const setPassageFlag = (dateStr, slot, patch) => {
+  const h = loadHistory()
+  if (!h[dateStr] || !h[dateStr][slot]) return
+  h[dateStr][slot] = { ...h[dateStr][slot], ...patch }
+  saveHistory(h)
+}
+
+// ─── Word lookup popover ────────────────────────────────────────────────────
 function useWordLookup(hasApiKey) {
   const [pop, setPop] = useState(null) // { word, x, y, loading, data, error }
 
@@ -344,8 +376,9 @@ function QuestionCard({ q, idx, selected, submitted, onSelect, source, theme }) 
 }
 
 // ─── Passage studio: understand → solve → review (shared) ─────────────────────
-function PassageStudio({ data, hasApiKey, source, onFinish }) {
+function PassageStudio({ data, hasApiKey, source, onFinish, dateKey, slotKey, autoRecord }) {
   const { pop, showWord, close } = useWordLookup(hasApiKey)
+  const [saved, setSaved] = useState(false)
   const [lines, setLines] = useState(data.lines || null)
   const [linesLoading, setLinesLoading] = useState(false)
   const [showLines, setShowLines] = useState(!!data.lines)
@@ -359,6 +392,10 @@ function PassageStudio({ data, hasApiKey, source, onFinish }) {
     setLines(data.lines || null); setShowLines(!!data.lines); setRevealed(false)
     setAnswers({}); setSubmitted(false); setSec(0)
     addToPlaybook(data.tips, data.elimination)
+    if (dateKey != null && slotKey != null) {
+      if (autoRecord) recordPassage(dateKey, slotKey, data, source)
+      setSaved(!!loadHistory()[dateKey]?.[slotKey]?.saved)
+    }
     clearInterval(timerRef.current)
     timerRef.current = setInterval(() => setSec(s => s + 1), 1000)
     return () => clearInterval(timerRef.current)
@@ -378,6 +415,15 @@ function PassageStudio({ data, hasApiKey, source, onFinish }) {
     finally { setLinesLoading(false) }
   }
 
+  const toggleSave = () => {
+    if (dateKey == null || slotKey == null) return
+    if (!loadHistory()[dateKey]?.[slotKey]) recordPassage(dateKey, slotKey, data, source)
+    const next = !loadHistory()[dateKey]?.[slotKey]?.saved
+    setPassageFlag(dateKey, slotKey, { saved: next })
+    setSaved(next)
+    showToast(next ? 'Passage saved for later practice' : 'Removed from saved', next ? 'success' : 'info')
+  }
+
   const submit = () => {
     clearInterval(timerRef.current)
     setSubmitted(true)
@@ -388,6 +434,7 @@ function PassageStudio({ data, hasApiKey, source, onFinish }) {
       logResult({ section: 'VARC', topic, source, stem: `[RC · ${theme}]\n\n${q.q}`, options: q.options, answer: q.correct, explanation: q.explanation, isCorrect: correct })
     })
     const score = questions.filter((q, i) => answers[i] === q.correct).length
+    if (dateKey != null && slotKey != null) setPassageFlag(dateKey, slotKey, { solved: true, score, total: questions.length })
     onFinish?.(score, questions.length)
     showToast(`Score: ${score}/${questions.length}`, score >= questions.length * 0.7 ? 'success' : 'info')
   }
@@ -405,6 +452,11 @@ function PassageStudio({ data, hasApiKey, source, onFinish }) {
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1 text-xs text-text-muted"><Clock size={11} /><TimerDisplay seconds={sec} /></div>
+            {dateKey != null && slotKey != null && (
+              <button onClick={toggleSave} title={saved ? 'Remove from saved' : 'Save for later practice'} className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-all ${saved ? 'bg-cat-orange/15 text-cat-orange border-cat-orange/40' : 'text-text-secondary border-border hover:border-border-light'}`}>
+                <Star size={12} className={saved ? 'fill-cat-orange' : ''} /> {saved ? 'Saved' : 'Save'}
+              </button>
+            )}
             <button onClick={explainHindi} disabled={linesLoading} className="flex items-center gap-1 px-2.5 py-1.5 bg-cat-purple/10 text-cat-purple border border-cat-purple/30 rounded-lg text-[11px] font-semibold hover:bg-cat-purple/20 transition-all disabled:opacity-50">
               <Languages size={12} />{linesLoading ? 'Explaining…' : showLines ? 'Hinglish ✓' : 'Explain in Hinglish'}
             </button>
@@ -487,7 +539,7 @@ function DecodeTab({ hasApiKey, onNavigate }) {
       </Card>
 
       {loading && <><CardSkeleton /><CardSkeleton /></>}
-      {data && !loading && <PassageStudio data={data} hasApiKey={hasApiKey} source="rc_decode" />}
+      {data && !loading && <PassageStudio data={data} hasApiKey={hasApiKey} source="rc_decode" dateKey={isoDay()} slotKey={`d_${makeId(data.passage)}`} />}
     </div>
   )
 }
@@ -556,7 +608,7 @@ function Daily5Tab({ hasApiKey, onNavigate }) {
 
       {loading && <><CardSkeleton /><CardSkeleton /></>}
       {selected !== null && slot && !loading && (
-        <PassageStudio key={selected} data={slot} hasApiKey={hasApiKey} source="rc_daily5" onFinish={onFinish} />
+        <PassageStudio key={selected} data={slot} hasApiKey={hasApiKey} source="rc_daily5" onFinish={onFinish} dateKey={isoDay()} slotKey={selected} autoRecord />
       )}
       {selected === null && !loading && (
         <Card className="text-center py-8">
@@ -615,11 +667,152 @@ function PlaybookTab() {
   )
 }
 
+// ─── My Passages: browse by date, save & mark solved ──────────────────────
+const entryLabel = (e) => typeof e.slot === 'number' ? `Passage #${e.slot + 1}` : 'Decoded'
+const sortEntries = (arr) => [...arr].sort((a, b) => {
+  const an = typeof a.slot === 'number', bn = typeof b.slot === 'number'
+  if (an && bn) return a.slot - b.slot
+  if (an) return -1
+  if (bn) return 1
+  return 0
+})
+
+function PassageMiniCard({ entry, onPractice, onToggleSaved, onToggleSolved, showDate }) {
+  const d = entry.data || {}
+  return (
+    <Card>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1.5 mb-1">
+            <span className="text-[11px] font-mono text-cat-blue font-bold">{entryLabel(entry)}</span>
+            {showDate && <span className="text-[10px] text-text-muted">{shortDay(entry.date)}</span>}
+            {d.difficulty && <Badge variant={DIFF_VARIANT[d.difficulty] || 'gray'}>{d.difficulty}</Badge>}
+            {entry.solved
+              ? <Badge variant="green">✓ Solved{entry.total ? ` ${entry.score}/${entry.total}` : ''}</Badge>
+              : <Badge variant="gray">Not solved</Badge>}
+          </div>
+          <p className="text-sm font-medium text-text-primary truncate">{d.title || 'Untitled passage'}</p>
+          {d.passage_type && <p className="text-[11px] text-text-muted truncate">{d.passage_type}</p>}
+        </div>
+        <button onClick={onToggleSaved} title={entry.saved ? 'Remove from saved' : 'Save for later'}
+          className={`flex-shrink-0 p-1.5 rounded-lg border transition-all ${entry.saved ? 'text-cat-orange border-cat-orange/40 bg-cat-orange/10' : 'text-text-muted border-border hover:border-border-light'}`}>
+          <Star size={14} className={entry.saved ? 'fill-cat-orange' : ''} />
+        </button>
+      </div>
+      <div className="flex items-center gap-2 mt-3">
+        <button onClick={onPractice} className="flex-1 py-2 bg-cat-blue text-white rounded-lg text-xs font-semibold hover:opacity-90 transition-all">Practice</button>
+        <button onClick={onToggleSolved} className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${entry.solved ? 'text-text-secondary border-border hover:border-border-light' : 'text-cat-green border-cat-green/40 hover:bg-cat-green/10'}`}>
+          {entry.solved ? 'Mark unsolved' : 'Mark solved'}
+        </button>
+      </div>
+    </Card>
+  )
+}
+
+function HistoryTab({ hasApiKey }) {
+  const [, forceTick] = useState(0)
+  const refresh = () => forceTick(n => n + 1)
+  const history = loadHistory()
+  const dates = Object.keys(history).sort().reverse()
+  const [view, setView] = useState('by-date')
+  const [date, setDate] = useState(dates[0] || isoDay())
+  const [practice, setPractice] = useState(null)
+
+  const toggleSaved = (dt, slot) => { setPassageFlag(dt, slot, { saved: !history[dt]?.[slot]?.saved }); refresh() }
+  const toggleSolved = (dt, slot) => { setPassageFlag(dt, slot, { solved: !history[dt]?.[slot]?.solved }); refresh() }
+
+  if (practice) {
+    const e = (loadHistory()[practice.date] || {})[practice.slot]
+    return (
+      <div className="space-y-4">
+        <button onClick={() => { setPractice(null); refresh() }} className="flex items-center gap-1 text-xs text-text-secondary hover:text-text-primary transition-colors"><ArrowLeft size={14} /> Back to list</button>
+        {e
+          ? <PassageStudio key={`${practice.date}_${practice.slot}`} data={e.data} hasApiKey={hasApiKey} source="rc_review" dateKey={practice.date} slotKey={practice.slot} onFinish={refresh} />
+          : <Card className="text-center py-8"><p className="text-sm text-text-secondary">This passage is no longer available.</p></Card>}
+      </div>
+    )
+  }
+
+  const savedEntries = dates.flatMap(dt => Object.values(history[dt] || {}).filter(x => x.saved))
+  const dayEntries = sortEntries(Object.values(history[date] || {}))
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2">
+        <button onClick={() => setView('by-date')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${view === 'by-date' ? 'bg-cat-blue text-white border-cat-blue' : 'border-border text-text-secondary hover:border-border-light'}`}>By Date</button>
+        <button onClick={() => setView('saved')} className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${view === 'saved' ? 'bg-cat-orange text-white border-cat-orange' : 'border-border text-text-secondary hover:border-border-light'}`}><Star size={12} /> Saved ({savedEntries.length})</button>
+      </div>
+
+      {view === 'by-date' && (
+        <>
+          <Card className="space-y-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Calendar size={15} className="text-cat-blue" />
+              <input type="date" value={date} max={isoDay()} onChange={e => setDate(e.target.value)}
+                className="bg-bg-secondary border border-border rounded-lg px-2 py-1 text-xs text-text-primary focus:border-cat-blue focus:outline-none" />
+              <span className="text-xs text-text-muted">{prettyDay(date)}</span>
+            </div>
+            {dates.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {dates.slice(0, 14).map(dt => {
+                  const es = Object.values(history[dt] || {})
+                  const solved = es.filter(x => x.solved).length
+                  return (
+                    <button key={dt} onClick={() => setDate(dt)}
+                      className={`px-2 py-1 rounded-lg text-[11px] border transition-all ${dt === date ? 'border-cat-blue bg-cat-blue/10 text-cat-blue' : 'border-border text-text-secondary hover:border-border-light'}`}>
+                      {shortDay(dt)} · {solved}/{es.length}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </Card>
+
+          {dayEntries.length === 0 ? (
+            <Card className="text-center py-8">
+              <Calendar size={26} className="mx-auto text-text-muted mb-2" />
+              <p className="text-sm text-text-secondary">No passages recorded on this day.</p>
+              <p className="text-xs text-text-muted mt-1">Open passages in Daily 5 and they'll be saved here by date, so you can revisit them and track what's solved.</p>
+            </Card>
+          ) : (
+            dayEntries.map(e => (
+              <PassageMiniCard key={String(e.slot)} entry={e}
+                onPractice={() => setPractice({ date, slot: e.slot })}
+                onToggleSaved={() => toggleSaved(date, e.slot)}
+                onToggleSolved={() => toggleSolved(date, e.slot)} />
+            ))
+          )}
+        </>
+      )}
+
+      {view === 'saved' && (
+        savedEntries.length === 0 ? (
+          <Card className="text-center py-8">
+            <Star size={26} className="mx-auto text-text-muted mb-2" />
+            <p className="text-sm text-text-secondary">No saved passages yet.</p>
+            <p className="text-xs text-text-muted mt-1">Tap Save on any passage you found challenging to practise it again later.</p>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {savedEntries.map(e => (
+              <PassageMiniCard key={`${e.date}_${e.slot}`} entry={e} showDate
+                onPractice={() => setPractice({ date: e.date, slot: e.slot })}
+                onToggleSaved={() => toggleSaved(e.date, e.slot)}
+                onToggleSolved={() => toggleSolved(e.date, e.slot)} />
+            ))}
+          </div>
+        )
+      )}
+    </div>
+  )
+}
+
 // ─── Main ──────────────────────────────────────────────────────
 const TABS = [
   { id: 'daily5', label: '🎯 Daily 5' },
   { id: 'decode', label: '📝 Decode a Passage' },
   { id: 'playbook', label: '📚 Playbook' },
+  { id: 'history', label: '🗂️ My Passages' },
 ]
 
 export default function RCTrainer({ hasApiKey, onNavigate }) {
@@ -638,6 +831,7 @@ export default function RCTrainer({ hasApiKey, onNavigate }) {
       {tab === 'daily5' && <Daily5Tab hasApiKey={hasApiKey} onNavigate={onNavigate} />}
       {tab === 'decode' && <DecodeTab hasApiKey={hasApiKey} onNavigate={onNavigate} />}
       {tab === 'playbook' && <PlaybookTab />}
+      {tab === 'history' && <HistoryTab hasApiKey={hasApiKey} />}
     </div>
   )
 }
