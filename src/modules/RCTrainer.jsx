@@ -69,6 +69,11 @@ Cover EVERY sentence in order.
 PASSAGE:
 """${passage}"""`
 
+const buildQuestionsPrompt = (passage) => `Create EXACTLY 4 authentic CAT-level Reading Comprehension questions for this passage — one each of Main Idea, Inference, Tone, and Vocabulary in Context. Return ONLY this JSON:
+{"questions":[{"q":"question","options":["A) ..","B) ..","C) ..","D) .."],"correct":"A|B|C|D","type":"Main Idea|Inference|Tone|Vocabulary in Context|Detail","explanation":"why the correct option is right (English)","option_analysis":{"A":"why A is right or wrong","B":"..","C":"..","D":".."}}]}
+PASSAGE:
+"""${passage}"""`
+
 // ─── Analytics mapping (mirrors VARC) ─────────────────────────────────────────
 const RC_TYPE_MAP = {
   'Main Idea': 'RC — Main Idea & Title',
@@ -379,6 +384,8 @@ function QuestionCard({ q, idx, selected, submitted, onSelect, source, theme }) 
 function PassageStudio({ data, hasApiKey, source, onFinish, dateKey, slotKey, autoRecord }) {
   const { pop, showWord, close } = useWordLookup(hasApiKey)
   const [saved, setSaved] = useState(false)
+  const [extraQuestions, setExtraQuestions] = useState(null)
+  const [genQ, setGenQ] = useState(false)
   const [lines, setLines] = useState(data.lines || null)
   const [linesLoading, setLinesLoading] = useState(false)
   const [showLines, setShowLines] = useState(!!data.lines)
@@ -391,6 +398,7 @@ function PassageStudio({ data, hasApiKey, source, onFinish, dateKey, slotKey, au
   useEffect(() => {
     setLines(data.lines || null); setShowLines(!!data.lines); setRevealed(false)
     setAnswers({}); setSubmitted(false); setSec(0)
+    setExtraQuestions(null); setGenQ(false)
     addToPlaybook(data.tips, data.elimination)
     if (dateKey != null && slotKey != null) {
       if (autoRecord) recordPassage(dateKey, slotKey, data, source)
@@ -401,7 +409,7 @@ function PassageStudio({ data, hasApiKey, source, onFinish, dateKey, slotKey, au
     return () => clearInterval(timerRef.current)
   }, [data])
 
-  const questions = data.questions || []
+  const questions = extraQuestions || data.questions || []
   const theme = data.theme || data.title || 'RC'
 
   const explainHindi = async () => {
@@ -422,6 +430,21 @@ function PassageStudio({ data, hasApiKey, source, onFinish, dateKey, slotKey, au
     setPassageFlag(dateKey, slotKey, { saved: next })
     setSaved(next)
     showToast(next ? 'Passage saved for later practice' : 'Removed from saved', next ? 'success' : 'info')
+  }
+
+  const generateQuestions = async () => {
+    if (!hasApiKey) { showToast('Add an API key in Settings to generate questions', 'info'); return }
+    setGenQ(true)
+    try {
+      const d = await getCachedContent(`rcq_${makeId(data.passage)}`, SYSTEM, buildQuestionsPrompt(data.passage), 2500)
+      const qs = Array.isArray(d.questions) ? d.questions : []
+      if (!qs.length) throw new Error('No questions returned — try again')
+      setExtraQuestions(qs)
+      if (dateKey != null && slotKey != null && loadHistory()[dateKey]?.[slotKey]) {
+        setPassageFlag(dateKey, slotKey, { data: { ...data, questions: qs } })
+      }
+    } catch (e) { showToast('Error: ' + e.message, 'error') }
+    finally { setGenQ(false) }
   }
 
   const submit = () => {
@@ -475,6 +498,15 @@ function PassageStudio({ data, hasApiKey, source, onFinish, dateKey, slotKey, au
         <button onClick={() => setRevealed(true)} className="w-full py-3 bg-cat-blue text-white rounded-xl font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2">
           I've understood it — Show Questions <ChevronRight size={15} />
         </button>
+      )}
+
+      {revealed && !submitted && questions.length === 0 && (
+        <Card className="text-center py-6">
+          <p className="text-sm text-text-secondary mb-3">This passage's questions weren't saved. Generate a fresh set of CAT-level questions to practise it now.</p>
+          <button onClick={generateQuestions} disabled={genQ} className="px-4 py-2.5 bg-cat-blue text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-50 inline-flex items-center gap-2">
+            <Sparkles size={14} />{genQ ? 'Generating…' : 'Generate CAT-level Questions'}
+          </button>
+        </Card>
       )}
 
       {(revealed || submitted) && questions.length > 0 && (
@@ -562,7 +594,7 @@ function Daily5Tab({ hasApiKey, onNavigate }) {
     setLoading(true)
     try {
       const p = plan[i]
-      const d = await getCachedContent(`rc5_${today()}_${i}`, SYSTEM, buildSlotPrompt(p.difficulty, p.genre, p.focus), 4000)
+      const d = await getCachedContent(`rc5_${today()}_${i}`, SYSTEM, buildSlotPrompt(p.difficulty, p.genre, p.focus), 5000)
       setSlot(d)
     } catch (e) { showToast('Error: ' + e.message, 'error') }
     finally { setLoading(false) }
