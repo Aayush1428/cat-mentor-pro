@@ -16,7 +16,18 @@ const sanitizeHeader = (val) => {
   return String(val).replace(/[^\x00-\x7F]/g, '')
 }
 
-const PROVIDER_LABEL = { groq: 'Groq', deepseek: 'DeepSeek' }
+const PROVIDER_LABEL = { groq: 'Groq', deepseek: 'DeepSeek', nvidia: 'NVIDIA' }
+const PROVIDER_ENDPOINT = { groq: '/api/groq', deepseek: '/api/deepseek', nvidia: '/api/nvidia' }
+const PROVIDER_MODEL = { groq: 'openai/gpt-oss-120b', deepseek: 'deepseek-chat', nvidia: 'meta/llama-3.3-70b-instruct' }
+const PROVIDERS = ['groq', 'deepseek', 'nvidia']
+
+// Ordered [provider, key] pairs: preferred first, then the rest as fallbacks.
+const providerOrder = (s) => {
+  const keys = { groq: s.groqKey, deepseek: s.deepseekKey, nvidia: s.nvidiaKey }
+  const pref = PROVIDERS.includes(s.preferredProvider) ? s.preferredProvider : 'groq'
+  return [pref, ...PROVIDERS.filter(p => p !== pref)].map(p => [p, keys[p]])
+}
+const hasAnyKey = (s) => !!s.groqKey || !!s.deepseekKey || !!s.nvidiaKey
 
 const friendlyError = (provider, status, rawMsg) => {
   const name = PROVIDER_LABEL[provider] || provider
@@ -32,8 +43,8 @@ const friendlyError = (provider, status, rawMsg) => {
 }
 
 const callProvider = async (provider, apiKey, messages, maxTokens) => {
-  const endpoint = provider === 'groq' ? '/api/groq' : '/api/deepseek'
-  const model = provider === 'groq' ? 'openai/gpt-oss-120b' : 'deepseek-chat'
+  const endpoint = PROVIDER_ENDPOINT[provider]
+  const model = PROVIDER_MODEL[provider]
   const cleanKey = sanitizeHeader(apiKey).trim()
   if (!cleanKey) throw new Error(`No ${PROVIDER_LABEL[provider] || provider} API key configured`)
   const body = { model, messages, max_tokens: maxTokens, temperature: 0.2 }
@@ -68,10 +79,8 @@ const callProvider = async (provider, apiKey, messages, maxTokens) => {
 
 export const callAI = async (systemPrompt, userMessage, maxTokens = 2000) => {
   const s = getSettings()
-  if (!s.groqKey && !s.deepseekKey) throw new Error('NO_API_KEY')
-  const order = s.preferredProvider === 'deepseek'
-    ? [['deepseek', s.deepseekKey], ['groq', s.groqKey]]
-    : [['groq', s.groqKey], ['deepseek', s.deepseekKey]]
+  if (!hasAnyKey(s)) throw new Error('NO_API_KEY')
+  const order = providerOrder(s)
   const errors = []
   for (const [p, k] of order) {
     if (!k) continue
@@ -85,10 +94,8 @@ export const callAI = async (systemPrompt, userMessage, maxTokens = 2000) => {
 
 export const chatAI = async (systemPrompt, history, maxTokens = 1500) => {
   const s = getSettings()
-  if (!s.groqKey && !s.deepseekKey) throw new Error('NO_API_KEY')
-  const order = s.preferredProvider === 'deepseek'
-    ? [['deepseek', s.deepseekKey], ['groq', s.groqKey]]
-    : [['groq', s.groqKey], ['deepseek', s.deepseekKey]]
+  if (!hasAnyKey(s)) throw new Error('NO_API_KEY')
+  const order = providerOrder(s)
   const errors = []
   for (const [p, k] of order) {
     if (!k) continue
@@ -112,3 +119,4 @@ export const clearAllCache = () => Object.keys(localStorage).filter(k => k.start
 
 export const testGroqConnection = async (k) => { await callProvider('groq', k, [{ role: 'user', content: 'Say OK' }], 64); return true }
 export const testDeepseekConnection = async (k) => { await callProvider('deepseek', k, [{ role: 'user', content: 'Say OK' }], 10); return true }
+export const testNvidiaConnection = async (k) => { await callProvider('nvidia', k, [{ role: 'user', content: 'Say OK' }], 16); return true }

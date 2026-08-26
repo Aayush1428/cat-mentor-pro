@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react'
 import { Card, SectionHeader, Badge, showToast } from '../components/ui/index.jsx'
-import { testGroqConnection, testDeepseekConnection, clearAllCache } from '../utils/ai.js'
+import { testGroqConnection, testDeepseekConnection, testNvidiaConnection, clearAllCache } from '../utils/ai.js'
 import { clearPerformance } from '../utils/performance.js'
 import { downloadBackup, importBackup, readFileAsText } from '../utils/backup.js'
 import { importOfficialPYQ, clearOfficialPYQ, getOfficialCount } from '../data/pyqOfficial.js'
@@ -18,6 +18,7 @@ export default function Settings({ onSave }) {
   const saved = get()
   const [groqKey, setGroqKey] = useState(saved.groqKey || '')
   const [deepseekKey, setDeepseekKey] = useState(saved.deepseekKey || '')
+  const [nvidiaKey, setNvidiaKey] = useState(saved.nvidiaKey || '')
   const [newsDataKey, setNewsDataKey] = useState(saved.newsDataKey || '')
   const [newsCatcherKey, setNewsCatcherKey] = useState(saved.newsCatcherKey || '')
   const [newsApiKey, setNewsApiKey] = useState(saved.newsApiKey || '')
@@ -27,6 +28,7 @@ export default function Settings({ onSave }) {
   const [saving, setSaving] = useState(false)
   const [testG, setTestG] = useState(null); const [testingG, setTestingG] = useState(false)
   const [testD, setTestD] = useState(null); const [testingD, setTestingD] = useState(false)
+  const [testN, setTestN] = useState(null); const [testingN, setTestingN] = useState(false)
   const [pyqText, setPyqText] = useState('')
   const [pyqCount, setPyqCount] = useState(getOfficialCount())
   const fileRef = useRef(null)
@@ -54,6 +56,7 @@ export default function Settings({ onSave }) {
     localStorage.setItem('cat_settings', JSON.stringify({
       groqKey: groqKey.trim(),
       deepseekKey: deepseekKey.trim(),
+      nvidiaKey: nvidiaKey.trim(),
       newsDataKey: newsDataKey.trim(),
       newsCatcherKey: newsCatcherKey.trim(),
       newsApiKey: newsApiKey.trim(),
@@ -80,6 +83,14 @@ export default function Settings({ onSave }) {
     try { await testDeepseekConnection(deepseekKey.trim()); setTestD('ok'); showToast('DeepSeek connected ✓', 'success') }
     catch (e) { setTestD('err'); showToast(e.message || 'DeepSeek connection failed', 'error') }
     finally { setTestingD(false) }
+  }
+
+  const doTestNvidia = async () => {
+    if (!nvidiaKey.trim()) { showToast('Enter NVIDIA key first', 'error'); return }
+    setTestingN(true); setTestN(null)
+    try { await testNvidiaConnection(nvidiaKey.trim()); setTestN('ok'); showToast('NVIDIA connected ✓', 'success') }
+    catch (e) { setTestN('err'); showToast(e.message || 'NVIDIA connection failed', 'error') }
+    finally { setTestingN(false) }
   }
 
   const clearNewsCache = () => {
@@ -141,6 +152,7 @@ export default function Settings({ onSave }) {
       <SectionHeader title="Settings" subtitle="Configure AI providers, news feeds and learning preferences" />
       <KeyInput label="Groq API Key" sub="Free tier available — get key at console.groq.com (GPT-OSS 120B, fastest)" val={groqKey} setVal={setGroqKey} testing={testingG} testResult={testG} onTest={doTestGroq} placeholder="gsk_..." />
       <KeyInput label="DeepSeek API Key" sub="Get key at platform.deepseek.com — deep reasoning, great for explanations" val={deepseekKey} setVal={setDeepseekKey} testing={testingD} testResult={testD} onTest={doTestDeepseek} placeholder="sk-..." />
+      <KeyInput label="NVIDIA API Key" sub="Free credits at build.nvidia.com — runs Llama-3.3 70B (great fallback provider)" val={nvidiaKey} setVal={setNvidiaKey} testing={testingN} testResult={testN} onTest={doTestNvidia} placeholder="nvapi-..." />
       <Card>
         <p className="text-sm font-semibold text-text-primary mb-2">News Feed Providers</p>
         <p className="text-xs text-text-secondary mb-3">For Times of India / Economic Times / Hindustan Times / finance aggregation, add at least one key below (NewsData is recommended).</p>
@@ -196,7 +208,7 @@ export default function Settings({ onSave }) {
       <Card>
         <p className="text-sm font-semibold text-text-primary mb-1">Preferred AI Provider</p>
         <p className="text-xs text-text-secondary mb-2">Used first when both keys are set. App auto-falls-back to the other if a call fails.</p>
-        <Btn opts={['groq', 'deepseek']} value={preferred} onChange={setPreferred} />
+        <Btn opts={['groq', 'deepseek', 'nvidia']} value={preferred} onChange={setPreferred} />
       </Card>
       <Card>
         <p className="text-sm font-semibold text-text-primary mb-3">CAT Preferences</p>

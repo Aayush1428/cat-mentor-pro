@@ -20,17 +20,13 @@ import Revision from './modules/Revision.jsx'
 import { addStudyTime, getTodayStudyTime } from './utils/performance.js'
 
 const getSettings = () => { try { return JSON.parse(localStorage.getItem('cat_settings') || '{}') } catch { return {} } }
+const anyKey = (s) => !!s.groqKey || !!s.deepseekKey || !!s.nvidiaKey
+const labelFor = (s) => [s.groqKey && 'Groq', s.deepseekKey && 'DeepSeek', s.nvidiaKey && 'NVIDIA'].filter(Boolean).join(' + ')
 
 export default function App() {
   const [activeModule, setActiveModule] = useState('dashboard')
-  const [hasApiKey, setHasApiKey] = useState(() => { const s = getSettings(); return !!s.groqKey || !!s.deepseekKey })
-  const [providerLabel, setProviderLabel] = useState(() => {
-    const s = getSettings()
-    if (s.groqKey && s.deepseekKey) return 'Groq + DeepSeek'
-    if (s.groqKey) return 'Groq'
-    if (s.deepseekKey) return 'DeepSeek'
-    return ''
-  })
+  const [hasApiKey, setHasApiKey] = useState(() => anyKey(getSettings()))
+  const [providerLabel, setProviderLabel] = useState(() => labelFor(getSettings()))
   const [studySeconds, setStudySeconds] = useState(getTodayStudyTime())
 
   useEffect(() => {
@@ -54,8 +50,8 @@ export default function App() {
   const handleNavigate = (m) => setActiveModule(m)
   const handleSettingsChange = () => {
     const s = getSettings()
-    setHasApiKey(!!s.groqKey || !!s.deepseekKey)
-    setProviderLabel(s.groqKey && s.deepseekKey ? 'Groq + DeepSeek' : s.groqKey ? 'Groq' : s.deepseekKey ? 'DeepSeek' : '')
+    setHasApiKey(anyKey(s))
+    setProviderLabel(labelFor(s))
   }
 
   const props = { onNavigate: handleNavigate, hasApiKey }
