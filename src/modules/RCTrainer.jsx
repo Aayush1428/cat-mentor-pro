@@ -407,7 +407,9 @@ function PassageStudio({ data, hasApiKey, source, onFinish, dateKey, slotKey, au
     clearInterval(timerRef.current)
     timerRef.current = setInterval(() => setSec(s => s + 1), 1000)
     return () => clearInterval(timerRef.current)
-  }, [data])
+    // Key on passage text, not object identity: parents (e.g. HistoryTab) re-create
+    // the data object every render, and App's 1s study-timer forces those re-renders.
+  }, [data.passage])
 
   const questions = extraQuestions || data.questions || []
   const theme = data.theme || data.title || 'RC'
