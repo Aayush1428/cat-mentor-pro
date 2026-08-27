@@ -41,8 +41,12 @@ Return ONLY this JSON:
   ]
 }`
 
-const buildSlotPrompt = (difficulty, genre, focus) => `Generate ONE authentic CAT Reading Comprehension passage with questions for daily practice.
-Genre: ${genre}. Difficulty: ${difficulty}.${focus ? ` Emphasise ${focus}-type questions — the aspirant is weak there.` : ''}
+const buildSlotPrompt = (difficulty, genre, focus, angle) => `Generate ONE original, authentic CAT Reading Comprehension passage with questions for daily practice.
+Write it in the intellectual, essayistic register of long-form publications like Aeon (aeon.co) and Arts & Letters Daily (aldaily.com): a specific, argument-driven thesis with nuance, tension and a counter-view — NOT a generic textbook overview.
+Domain: ${genre}.
+Build the passage specifically around this angle: ${angle}.
+Difficulty: ${difficulty}.${focus ? ` Emphasise ${focus}-type questions — the aspirant is weak there.` : ''}
+Commit to a precise, non-obvious argument. Avoid clichéd, introductory or over-used takes, and do NOT reuse common stock examples. The passage must be ENTIRELY ORIGINAL — never quote, paraphrase or copy any real article.
 Passage length: ${difficulty === 'Hard' ? '550-650' : difficulty === 'Medium' ? '450-550' : '350-450'} words, dense academic CAT style.
 Return ONLY this JSON:
 {
@@ -61,7 +65,7 @@ Return ONLY this JSON:
     {"q": "question", "options": ["A) ..","B) ..","C) ..","D) .."], "correct": "A|B|C|D", "type": "Main Idea|Inference|Tone|Vocabulary in Context|Detail", "explanation": "why correct", "option_analysis": {"A": "..","B": "..","C": "..","D": ".."}}
   ]
 }
-Provide EXACTLY 4 questions.`
+Tips and elimination must be specific to THIS passage's argument and traps, not generic advice. Provide EXACTLY 4 questions.`
 
 const buildLinesPrompt = (passage) => `Explain this passage to a Hindi-speaking CAT aspirant, sentence by sentence, in casual conversational HINGLISH (Hindi in Roman/English script mixed with English words — jaise ek dost line-by-line samjhata hai, e.g. "Yahan author ye point bana raha hai ki..."). Do NOT use pure Devanagari Hindi. Return ONLY this JSON:
 {"lines":[{"text":"the exact sentence","hindi":"what it conveys in casual Hinglish (Roman script)","gist":"short English gist"}]}
@@ -85,7 +89,34 @@ const RC_TYPE_MAP = {
 const rcTopic = (type) => RC_TYPE_MAP[type] || 'RC — Inference Questions'
 const RC_TYPES = ['Main Idea', 'Inference', 'Tone', 'Vocabulary in Context']
 
-const GENRES = ['Philosophy & Abstract', 'Economics & Business', 'Science & Technology', 'History & Culture', 'Psychology & Behaviour', 'Literature & Art', 'Politics & Society', 'Environment & Ecology']
+// Broad essayistic domains (Aeon / Arts & Letters Daily register), each with specific angles.
+// The daily plan seeded-shuffles this pool so topics rotate and rarely repeat.
+const THEMES = [
+  { genre: 'Philosophy & Ethics', angles: ['the ethics of what we owe future generations', 'whether free will survives modern neuroscience', 'moral luck and how chance shapes blame', 'the paradox of tolerance in open societies', 'the moral status of intuitions', 'the value of doubt and intellectual humility'] },
+  { genre: 'Psychology & Mind', angles: ['the limits of introspection', 'why memory is reconstructive rather than a recording', 'the replication crisis and self-knowledge', 'boredom as a cognitive signal', 'the psychology of awe', 'how language shapes what we feel'] },
+  { genre: 'Neuroscience & Consciousness', angles: ['the hard problem of consciousness', 'the brain as a prediction machine', 'what split-brain cases reveal about the self', 'why pain is more interpretation than sensation', 'attention as a scarce neural resource'] },
+  { genre: 'History & Civilisation', angles: ['how contingency, not destiny, shaped empires', 'the medieval Indian Ocean trade networks', 'why some revolutions devour their own', 'the material history of paper and bureaucracy', 'how disease redrew political maps'] },
+  { genre: 'Economics & Markets', angles: ['whether GDP still measures anything meaningful', 'the economics of attention', 'why speculative bubbles recur despite memory', 'informal economies as rational systems', 'the hidden costs of efficiency'] },
+  { genre: 'Science & Method', angles: ['what counts as a scientific explanation', 'fine-tuning and the anthropic principle', 'why replication is the soul of science', 'the aesthetics of a mathematical proof', 'whether time is fundamental or emergent'] },
+  { genre: 'Biology & Evolution', angles: ['cooperation as an evolutionary puzzle', 'the extended phenotype and where an organism ends', 'why ageing exists at all', 'symbiosis and the myth of the lone individual', 'convergent evolution and design'] },
+  { genre: 'Technology & Society', angles: ['algorithmic curation and the loss of serendipity', 'the politics embedded in infrastructure', 'why automation reshapes status, not only jobs', 'the right to be forgotten', 'maintenance as the unseen labour of technology'] },
+  { genre: 'Art & Aesthetics', angles: ['why we find dissonance beautiful', 'the economics of artistic reputation', 'forgery and the meaning of authenticity', 'the sublime versus the merely beautiful', 'how institutions manufacture artistic value'] },
+  { genre: 'Literature & Language', angles: ['untranslatable words and the limits of language', 'why the novel keeps outliving its obituaries', 'the politics of a national language', 'silence and the unsaid in fiction', 'how metaphor structures abstract thought'] },
+  { genre: 'Anthropology & Culture', angles: ['gift economies and the logic of reciprocity', 'ritual as a technology of trust', 'how the experience of time varies across cultures', 'the invention of tradition', 'kinship as a made, not given, category'] },
+  { genre: 'Environment & Climate', angles: ['rewilding and the ethics of intervention', 'the real tragedy of the commons', 'why climate is a failure of imagination', 'slow violence and invisible harm', 'the deep history of the Anthropocene'] },
+  { genre: 'Politics & Power', angles: ['deliberative democracy beyond voting', 'how bureaucracies acquire a will of their own', 'the paradox of transparency', 'federalism as a laboratory of governance', 'why legitimacy outlasts force'] },
+  { genre: 'Sociology & Society', angles: ['the strength of weak ties', 'the sociology of waiting', 'how trust scales in large societies', 'stigma and the management of identity', 'the hidden order of cities'] },
+  { genre: 'Mathematics & Logic', angles: ['what Gödel actually showed', 'the unreasonable effectiveness of mathematics', 'infinity and the sizes of the uncountable', 'randomness versus the appearance of pattern', 'proof as a form of persuasion'] },
+  { genre: 'Religion & Belief', angles: ['secularisation and its discontents', 'ritual without belief', 'the problem of evil across traditions', 'how myths encode practical knowledge', 'pilgrimage as embodied argument'] },
+  { genre: 'Law & Justice', angles: ['restorative versus retributive justice', 'why hard cases make bad law', 'the fiction of the reasonable person', 'rights as claims versus rights as trumps', 'the ethics of deterrence'] },
+  { genre: 'Health & Medicine', angles: ['the placebo effect as real medicine', 'overdiagnosis and the manufacture of illness', 'the microbiome and the self as an ecosystem', 'why pain is chronically undertreated', 'the blind spots of evidence-based medicine'] },
+  { genre: 'Cognitive Science', angles: ['embodied cognition and thinking with the body', 'heuristics as shortcuts rather than errors', 'the myth of multitasking', 'expertise and the structure of intuition', 'why forgetting is a feature'] },
+  { genre: 'Urbanism & Architecture', angles: ['the street as social infrastructure', 'how street grids shape civic behaviour', 'the afterlife of ruins', 'housing as a right versus a market', 'the unseen acoustics of a city'] },
+  { genre: 'Media & Information', angles: ['the attention economy and its externalities', 'why corrections rarely undo misinformation', 'archives and what societies choose to remember', 'virality as a structural, not moral, phenomenon', 'the epistemics of trusting experts'] },
+  { genre: 'Globalisation & Trade', angles: ['the shipping container and the logistics of modern life', 'comparative advantage and its critics', 'cultural exchange versus homogenisation', 'the ethics of global supply chains', 'migration and the economics of remittances'] },
+  { genre: 'Music & Sound', angles: ['why rhythm synchronises groups', 'the cultural construction of noise', 'improvisation as real-time cognition', 'the role of silence in composition', 'how recording changed the way we listen'] },
+  { genre: 'Education & Learning', angles: ['the testing effect and productive difficulty', 'why curiosity resists standardisation', 'the hidden curriculum', 'deliberate practice and expertise', 'the surprising case for some rote learning'] },
+]
 
 // Find the RC question type the user is weakest at, to target daily practice.
 const weakestRCType = () => {
@@ -100,21 +131,29 @@ const weakestRCType = () => {
   return worst
 }
 
-const dayIndex = () => { const n = new Date(); return Math.floor((n - new Date(n.getFullYear(), 0, 0)) / 86400000) }
+const daySeed = () => { const d = new Date(); return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000) }
 
-// Deterministic-per-day plan: 5 passages of escalating difficulty and varied genres,
-// with the two middle-to-hard slots targeting the user's weakest question type.
+// Tiny deterministic PRNG so a given calendar day always yields the same plan.
+const mulberry32 = (seed) => () => {
+  seed |= 0; seed = (seed + 0x6D2B79F5) | 0
+  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+}
+
+// Deterministic-per-day plan: 5 distinct essayistic domains (seeded-shuffled from the pool so
+// topics rotate and rarely repeat) at escalating difficulty, each with a specific rotating angle;
+// the three harder slots target the user's weakest question type.
 const buildDailyPlan = () => {
-  const di = dayIndex()
-  const g = (o) => GENRES[(di * 5 + o) % GENRES.length]
+  const rng = mulberry32(daySeed())
+  const idx = THEMES.map((_, i) => i)
+  for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]] }
   const focus = weakestRCType()
-  return [
-    { difficulty: 'Easy', genre: g(0), focus: null },
-    { difficulty: 'Medium', genre: g(1), focus: null },
-    { difficulty: 'Medium', genre: g(2), focus },
-    { difficulty: 'Hard', genre: g(3), focus },
-    { difficulty: 'Hard', genre: g(4), focus },
-  ]
+  const diffs = ['Easy', 'Medium', 'Medium', 'Hard', 'Hard']
+  return idx.slice(0, 5).map((ti, i) => {
+    const t = THEMES[ti]
+    return { difficulty: diffs[i], genre: t.genre, angle: t.angles[Math.floor(rng() * t.angles.length)], focus: i >= 2 ? focus : null }
+  })
 }
 
 const DIFF_VARIANT = { Easy: 'green', Medium: 'orange', Hard: 'red' }
@@ -596,7 +635,7 @@ function Daily5Tab({ hasApiKey, onNavigate }) {
     setLoading(true)
     try {
       const p = plan[i]
-      const d = await getCachedContent(`rc5_${today()}_${i}`, SYSTEM, buildSlotPrompt(p.difficulty, p.genre, p.focus), 5000)
+      const d = await getCachedContent(`rc5b_${today()}_${i}`, SYSTEM, buildSlotPrompt(p.difficulty, p.genre, p.focus, p.angle), 5000)
       setSlot(d)
     } catch (e) { showToast('Error: ' + e.message, 'error') }
     finally { setLoading(false) }
