@@ -1,2 +1,8 @@
 node_modules
 dist
+
+# MBA Pathshala raw source (multi-GB) — only compressed public/mba-pathshala images are committed
+MBA Pathshala Questions.zip
+MBA Pathshala Questions/
+.rawpdf/
+.inspect/

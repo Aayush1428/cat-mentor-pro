@@ -9,6 +9,7 @@ import VARC from './modules/VARC.jsx'
 import RCTrainer from './modules/RCTrainer.jsx'
 import DILR from './modules/DILR.jsx'
 import Quant from './modules/Quant.jsx'
+import MBAPathshala from './modules/MBAPathshala.jsx'
 import NewsHub from './modules/NewsHub.jsx'
 import Vocabulary from './modules/Vocabulary.jsx'
 import { PreviousPapers, PYQTopics } from './modules/PreviousPapers.jsx'
@@ -65,6 +66,7 @@ export default function App() {
       case 'rc_trainer': return <RCTrainer {...props} />
       case 'dilr':       return <DILR {...props} />
       case 'quant':      return <Quant {...props} />
+      case 'mba_pathshala': return <MBAPathshala {...props} />
       case 'news':       return <NewsHub {...props} />
       case 'vocabulary': return <Vocabulary {...props} />
       case 'pyq':        return <PreviousPapers />

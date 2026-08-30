@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { LayoutDashboard, BookOpen, Brain, Calculator, FileText, BarChart3, Lightbulb, MessageSquare, Settings, ChevronLeft, ChevronRight, BookMarked, Trophy, CalendarCheck, Repeat, Newspaper, Languages } from 'lucide-react'
+import { LayoutDashboard, BookOpen, Brain, Calculator, FileText, BarChart3, Lightbulb, MessageSquare, Settings, ChevronLeft, ChevronRight, BookMarked, Trophy, CalendarCheck, Repeat, Newspaper, Languages, GraduationCap } from 'lucide-react'
 
 const NAV = [
   { id: 'dashboard',   icon: LayoutDashboard, label: 'Dashboard' },
@@ -9,6 +9,7 @@ const NAV = [
   { id: 'rc_trainer',  icon: Languages,        label: 'RC Trainer' },
   { id: 'dilr',        icon: Brain,            label: 'DILR' },
   { id: 'quant',       icon: Calculator,       label: 'Quantitative' },
+  { id: 'mba_pathshala', icon: GraduationCap,  label: 'MBA Pathshala' },
   { id: 'news',        icon: Newspaper,        label: 'Daily News' },
   { id: 'vocabulary',  icon: Lightbulb,        label: 'Vocabulary' },
   { id: 'pyq',         icon: FileText,         label: 'Previous Papers' },
