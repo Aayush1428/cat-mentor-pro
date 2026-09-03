@@ -5,7 +5,8 @@ import { recordAttempt } from '../utils/performance.js'
 import { logResult } from '../utils/bookmarks.js'
 import LearnPanel from '../components/LearnPanel.jsx'
 import { SECTIONS } from '../data/curriculum.js'
-import { Brain, RotateCcw, Lightbulb, ChevronRight } from 'lucide-react'
+import { getDynTopicsBySection, getCapturedByTopic } from '../utils/captured.js'
+import { Brain, RotateCcw, Lightbulb, ChevronRight, Sparkles } from 'lucide-react'
 
 const SYSTEM = `You are a CAT DILR expert. Generate authentic CAT-style DILR sets. The sets must be solvable with the given information — no ambiguity or missing data. Return ONLY valid JSON, no preamble.`
 
@@ -85,7 +86,7 @@ function DILRQuestion({ q, idx, topic, context, selected, onSelect, submitted })
   )
 }
 
-function SetPractice({ topic, hasApiKey, onNavigate }) {
+function SetPractice({ topic, topicId, dynamic, hasApiKey, onNavigate }) {
   const [difficulty, setDifficulty] = useState('Medium')
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -98,7 +99,13 @@ function SetPractice({ topic, hasApiKey, onNavigate }) {
     setLoading(true); setData(null); setAnswers({}); setSubmitted(false); setShowApproach(false)
     try {
       const promptFn = TOPIC_PROMPTS[topic] || GENERIC_PROMPT
-      const prompt = TOPIC_PROMPTS[topic] ? promptFn(difficulty) : GENERIC_PROMPT(topic, difficulty)
+      let prompt = TOPIC_PROMPTS[topic] ? promptFn(difficulty) : GENERIC_PROMPT(topic, difficulty)
+      // Brand-new LRDI type the student asked the AI Tutor about: anchor the set on the
+      // captured example(s) so the generated set matches that novel logic/pattern.
+      if (dynamic && topicId) {
+        const ex = getCapturedByTopic(topicId).slice(0, 3).map(q => q.question).filter(Boolean)
+        if (ex.length) prompt += `\n\nThis is a NEW question type the student asked about in the AI Tutor. Match the exact logic, style and difficulty of these example question(s):\n${ex.map((q, i) => `${i + 1}. ${q}`).join('\n')}`
+      }
       const d = await callAI(SYSTEM, prompt, 2200)
       setData(d)
     } catch (e) { showToast('Error: ' + e.message, 'error') }
@@ -213,6 +220,7 @@ export default function DILR({ hasApiKey, onNavigate }) {
 
   const lrTopics = topics.filter(t => t.tags.includes('LR'))
   const diTopics = topics.filter(t => t.tags.includes('DI'))
+  const dynTopics = getDynTopicsBySection('DILR')
 
   const priorityColor = (p) => p===1?'red':p===2?'orange':'green'
   const priorityLabel = (p) => p===1?'🔴 Must Do':p===2?'🟡 Important':'🟢 Optional'
@@ -220,13 +228,37 @@ export default function DILR({ hasApiKey, onNavigate }) {
   if (selectedTopic) return (
     <div className="animate-fade-in max-w-3xl">
       <button onClick={() => setSelectedTopic(null)} className="text-xs text-cat-purple hover:underline mb-4 flex items-center gap-1">← Back to Topics</button>
-      <SetPractice topic={selectedTopic.name} hasApiKey={hasApiKey} onNavigate={onNavigate} />
+      <SetPractice topic={selectedTopic.name} topicId={selectedTopic.id} dynamic={!!selectedTopic.dynamic} hasApiKey={hasApiKey} onNavigate={onNavigate} />
     </div>
   )
 
   return (
     <div className="animate-fade-in max-w-3xl space-y-5">
       <SectionHeader title="DILR Practice" subtitle="Data Interpretation + Logical Reasoning — topic-wise sets with step-by-step solutions" />
+
+      {dynTopics.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-1.5">
+            <Sparkles size={15} className="text-cat-purple" />
+            <p className="text-sm font-semibold text-text-primary">New from AI Tutor</p>
+          </div>
+          <p className="text-xs text-text-muted -mt-1">Fresh LRDI types created from questions you asked the tutor — practice sets are generated to match them.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {dynTopics.map(t => (
+              <Card key={t.id} hover onClick={() => setSelectedTopic({ ...t, dynamic: true })} className="group border-cat-purple/30">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-semibold text-text-primary group-hover:text-cat-purple transition-colors">{t.name}</p>
+                  <ChevronRight size={14} className="text-text-muted group-hover:text-cat-purple" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="purple" className="text-[10px]">✦ New type</Badge>
+                  <Badge variant="blue" className="text-[10px]">{getCapturedByTopic(t.id).length} from tutor</Badge>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="space-y-3">
         <p className="text-sm font-semibold text-text-primary">🧠 Logical Reasoning</p>

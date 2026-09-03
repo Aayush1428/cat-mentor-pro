@@ -5,8 +5,9 @@ import { recordAttempt } from '../utils/performance.js'
 import { logResult } from '../utils/bookmarks.js'
 import { PREVIOUS_PAPERS, PAPER_SOURCES, SECTIONS, getAllTopics } from '../data/curriculum.js'
 import { getPYQByTopic } from '../data/pyqBank.js'
+import { getCapturedByTopic, getDynTopics, generateSimilarQuestions } from '../utils/captured.js'
 import { getOfficialByTopic, getOfficialYears } from '../data/pyqOfficial.js'
-import { FileText, ExternalLink, BookMarked, RotateCcw, ShieldCheck } from 'lucide-react'
+import { FileText, ExternalLink, BookMarked, RotateCcw, ShieldCheck, Sparkles } from 'lucide-react'
 
 const SYSTEM = `You are a CAT question writer. You create ORIGINAL practice questions in the STYLE of CAT (Quantitative Aptitude, DILR, VARC). You NEVER claim a question is from a specific real exam year or slot, and you NEVER fabricate exam attributions. Return ONLY valid JSON, no preamble.`
 
@@ -163,6 +164,7 @@ function PYQSession({ topic, section, hasApiKey, onBack, onNavigate }) {
   const official = getOfficialByTopic(topic.id)
   const officialYears = getOfficialYears(topic.id)
   const bank = getPYQByTopic(topic.id)
+  const captured = getCapturedByTopic(topic.id)
   const [tier, setTier] = useState(null)
 
   const loadOfficial = () => {
@@ -188,6 +190,32 @@ function PYQSession({ topic, section, hasApiKey, onBack, onNavigate }) {
     }))
     setTier('verified'); setQuestions(mapped); setAnswers({}); setSubmitted(false)
     showToast(`Loaded ${mapped.length} verified questions`, 'success')
+  }
+
+  const loadCaptured = () => {
+    const mapped = captured.map(q => ({
+      question: q.question,
+      options: q.options,
+      correct: q.correct,
+      solution: q.solution,
+      difficulty: q.difficulty,
+      key_concept: q.concept,
+      _tier: 'captured',
+    }))
+    setTier('captured'); setQuestions(mapped); setAnswers({}); setSubmitted(false)
+    showToast(`Loaded ${mapped.length} question${mapped.length > 1 ? 's' : ''} the tutor learned`, 'success')
+  }
+
+  const generateSimilar = async () => {
+    if (!hasApiKey) { onNavigate('settings'); return }
+    setLoading(true); setQuestions([]); setAnswers({}); setSubmitted(false); setTier('captured')
+    try {
+      const items = await generateSimilarQuestions({ topicId: topic.id, topicName: topic.name, sectionId: section.id, sectionLabel: section.label, count })
+      const mapped = items.map(q => ({ question: q.question, options: q.options, correct: q.correct, solution: q.solution, difficulty: q.difficulty, key_concept: q.concept, _tier: 'captured' }))
+      if (!mapped.length) { showToast('Could not generate — try again', 'error'); setTier(null) }
+      else { setQuestions(mapped); showToast(`Generated ${mapped.length} new similar question${mapped.length > 1 ? 's' : ''}`, 'success') }
+    } catch (e) { showToast('Error: ' + e.message, 'error'); setTier(null) }
+    finally { setLoading(false) }
   }
 
   const generate = async () => {
@@ -229,6 +257,7 @@ function PYQSession({ topic, section, hasApiKey, onBack, onNavigate }) {
         <Badge variant="blue">{section.label}</Badge>
         {tier==='official' && <Badge variant="green">Authentic PYQ</Badge>}
         {tier==='verified' && <Badge variant="blue">Verified Practice</Badge>}
+        {tier==='captured' && <Badge variant="purple">From AI Tutor</Badge>}
         {tier==='ai' && <Badge variant="orange">AI Practice</Badge>}
         {!tier && <Badge variant="gray">Pick a source below</Badge>}
       </div>
@@ -261,6 +290,22 @@ function PYQSession({ topic, section, hasApiKey, onBack, onNavigate }) {
             <button onClick={loadVerified} className="w-full py-2.5 bg-cat-blue text-white rounded-xl text-xs font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2">
               <BookMarked size={14}/> Load Verified Practice Bank
             </button>
+          </div>
+        )}
+        {captured.length > 0 && (
+          <div className="bg-cat-purple/5 border border-cat-purple/30 rounded-xl p-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Sparkles size={14} className="text-cat-purple" />
+              <p className="text-xs font-semibold text-cat-purple">{captured.length} question{captured.length > 1 ? 's' : ''} the AI Tutor learned from your doubts</p>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={loadCaptured} className="flex-1 py-2.5 bg-cat-purple text-white rounded-xl text-xs font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2">
+                <Sparkles size={14}/> Practice ({captured.length})
+              </button>
+              <button onClick={generateSimilar} disabled={loading} className="flex-1 py-2.5 bg-bg-secondary border border-cat-purple/40 text-cat-purple rounded-xl text-xs font-semibold hover:bg-cat-purple/10 disabled:opacity-50 transition-all flex items-center justify-center gap-2">
+                <RotateCcw size={14}/> {loading ? 'Generating...' : 'Generate similar'}
+              </button>
+            </div>
           </div>
         )}
         <div><p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">AI Practice (CAT-style · not real PYQs)</p>
@@ -345,7 +390,7 @@ function PYQSession({ topic, section, hasApiKey, onBack, onNavigate }) {
           ))}
 
           {!submitted && <button onClick={submit} disabled={Object.keys(answers).length===0} className="w-full py-3 bg-cat-blue text-white rounded-xl font-semibold disabled:opacity-40 transition-all">Submit</button>}
-          {submitted && <button onClick={() => tier==='official' ? loadOfficial() : tier==='verified' ? loadVerified() : generate()} className="w-full py-3 bg-cat-blue text-white rounded-xl font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2"><RotateCcw size={14}/> {tier==='ai' ? 'More AI Practice' : 'Retake'}</button>}
+          {submitted && <button onClick={() => tier==='official' ? loadOfficial() : tier==='verified' ? loadVerified() : tier==='captured' ? loadCaptured() : generate()} className="w-full py-3 bg-cat-blue text-white rounded-xl font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2"><RotateCcw size={14}/> {tier==='ai' ? 'More AI Practice' : 'Retake'}</button>}
         </>
       )}
     </div>
@@ -357,7 +402,10 @@ export function PYQTopics({ hasApiKey, onNavigate }) {
   const [selectedSection, setSelectedSection] = useState(null)
   const [filterSection, setFilterSection] = useState('All')
 
-  const allTopics = getAllTopics()
+  const allTopics = [
+    ...getAllTopics(),
+    ...getDynTopics().map(t => ({ id: t.id, name: t.name, sectionId: t.sectionId, priority: 2, dynamic: true })),
+  ]
   const filtered = filterSection === 'All' ? allTopics : allTopics.filter(t => t.sectionId === filterSection)
 
   if (selectedTopic && selectedSection) return (
@@ -390,8 +438,10 @@ export function PYQTopics({ hasApiKey, onNavigate }) {
                     <Badge variant={topic.priority===1?'red':topic.priority===2?'orange':'green'} className="text-[9px]">
                       {topic.priority===1?'P1':topic.priority===2?'P2':'P3'}
                     </Badge>
+                    {topic.dynamic && <Badge variant="purple" className="text-[9px]">✦ New type</Badge>}
                     {getOfficialByTopic(topic.id).length > 0 && <Badge variant="green" className="text-[9px]">★ {getOfficialByTopic(topic.id).length} real</Badge>}
                     {getPYQByTopic(topic.id).length > 0 && <Badge variant="blue" className="text-[9px]">✓ {getPYQByTopic(topic.id).length} verified</Badge>}
+                    {getCapturedByTopic(topic.id).length > 0 && <Badge variant="purple" className="text-[9px]">✦ {getCapturedByTopic(topic.id).length} tutor</Badge>}
                   </div>
                 </div>
                 <BookMarked size={13} className="text-text-muted group-hover:text-cat-blue flex-shrink-0" />

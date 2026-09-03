@@ -19,6 +19,9 @@ const sanitizeHeader = (val) => {
 const PROVIDER_LABEL = { groq: 'Groq', deepseek: 'DeepSeek', nvidia: 'NVIDIA' }
 const PROVIDER_ENDPOINT = { groq: '/api/groq', deepseek: '/api/deepseek', nvidia: '/api/nvidia' }
 const PROVIDER_MODEL = { groq: 'openai/gpt-oss-120b', deepseek: 'deepseek-chat', nvidia: 'meta/llama-3.3-70b-instruct' }
+// Multimodal (image-reading) models. deepseek-chat has no vision, so it is intentionally omitted.
+const PROVIDER_VISION_MODEL = { groq: 'meta-llama/llama-4-scout-17b-16e-instruct', nvidia: 'meta/llama-4-scout-17b-16e-instruct' }
+const VISION_PROVIDERS = ['groq', 'nvidia']
 const PROVIDERS = ['groq', 'deepseek', 'nvidia']
 
 // Ordered [provider, key] pairs: preferred first, then the rest as fallbacks.
@@ -27,7 +30,12 @@ const providerOrder = (s) => {
   const pref = PROVIDERS.includes(s.preferredProvider) ? s.preferredProvider : 'groq'
   return [pref, ...PROVIDERS.filter(p => p !== pref)].map(p => [p, keys[p]])
 }
+// Same order, but only providers whose model can read images and that have a key configured.
+const visionProviderOrder = (s) => providerOrder(s).filter(([p, k]) => VISION_PROVIDERS.includes(p) && !!k)
 const hasAnyKey = (s) => !!s.groqKey || !!s.deepseekKey || !!s.nvidiaKey
+
+// True when at least one image-capable provider key is configured (used to enable image upload in the UI).
+export const visionAvailable = () => visionProviderOrder(getSettings()).length > 0
 
 const friendlyError = (provider, status, rawMsg) => {
   const name = PROVIDER_LABEL[provider] || provider
@@ -42,14 +50,15 @@ const friendlyError = (provider, status, rawMsg) => {
   return `${name}: ${rawMsg || 'request failed'}`
 }
 
-const callProvider = async (provider, apiKey, messages, maxTokens) => {
+const callProvider = async (provider, apiKey, messages, maxTokens, opts = {}) => {
   const endpoint = PROVIDER_ENDPOINT[provider]
-  const model = PROVIDER_MODEL[provider]
+  const model = opts.vision ? (PROVIDER_VISION_MODEL[provider] || PROVIDER_MODEL[provider]) : PROVIDER_MODEL[provider]
   const cleanKey = sanitizeHeader(apiKey).trim()
   if (!cleanKey) throw new Error(`No ${PROVIDER_LABEL[provider] || provider} API key configured`)
   const body = { model, messages, max_tokens: maxTokens, temperature: 0.2 }
   // gpt-oss is a reasoning model — keep reasoning-token overhead low so it doesn't eat the budget.
-  if (provider === 'groq') body.reasoning_effort = 'low'
+  // The Llama-4 vision model is not a reasoning model, so the flag is skipped when reading images.
+  if (provider === 'groq' && !opts.vision) body.reasoning_effort = 'low'
   try {
     const r = await fetch(endpoint, {
       method: 'POST',
@@ -92,14 +101,17 @@ export const callAI = async (systemPrompt, userMessage, maxTokens = 2000) => {
   throw new Error(errors.join(' | ') || 'All AI providers failed')
 }
 
-export const chatAI = async (systemPrompt, history, maxTokens = 1500) => {
+export const chatAI = async (systemPrompt, history, maxTokens = 1500, opts = {}) => {
   const s = getSettings()
   if (!hasAnyKey(s)) throw new Error('NO_API_KEY')
-  const order = providerOrder(s)
+  const order = opts.vision ? visionProviderOrder(s) : providerOrder(s)
+  if (opts.vision && order.length === 0) {
+    throw new Error('Reading an image needs a Groq or NVIDIA API key — their Llama-4 vision models can see images. Add one in Settings, or remove the image and describe the question in text.')
+  }
   const errors = []
   for (const [p, k] of order) {
     if (!k) continue
-    try { return await callProvider(p, k, [{ role: 'system', content: systemPrompt }, ...history], maxTokens) }
+    try { return await callProvider(p, k, [{ role: 'system', content: systemPrompt }, ...history], maxTokens, { vision: opts.vision }) }
     catch (e) { errors.push(e.message) }
   }
   throw new Error(errors.join(' | ') || 'All AI providers failed')
