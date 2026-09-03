@@ -23,7 +23,7 @@ const PROVIDER_MODEL = { groq: 'openai/gpt-oss-120b', deepseek: 'deepseek-chat',
 // key that lacks one Llama-4 variant can still fall back to the other. deepseek-chat has no vision.
 const PROVIDER_VISION_MODELS = {
   groq: ['meta-llama/llama-4-scout-17b-16e-instruct', 'meta-llama/llama-4-maverick-17b-128e-instruct'],
-  nvidia: ['meta/llama-4-scout-17b-16e-instruct', 'meta/llama-4-maverick-17b-128e-instruct'],
+  nvidia: ['meta/llama-3.2-90b-vision-instruct', 'meta/llama-3.2-11b-vision-instruct'],
 }
 const VISION_PROVIDERS = ['groq', 'nvidia']
 const PROVIDERS = ['groq', 'deepseek', 'nvidia']
