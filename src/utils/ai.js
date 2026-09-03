@@ -18,7 +18,7 @@ const sanitizeHeader = (val) => {
 
 const PROVIDER_LABEL = { groq: 'Groq', deepseek: 'DeepSeek', nvidia: 'NVIDIA' }
 const PROVIDER_ENDPOINT = { groq: '/api/groq', deepseek: '/api/deepseek', nvidia: '/api/nvidia' }
-const PROVIDER_MODEL = { groq: 'openai/gpt-oss-120b', deepseek: 'deepseek-chat', nvidia: 'meta/llama-3.3-70b-instruct' }
+const PROVIDER_MODEL = { groq: 'openai/gpt-oss-120b', deepseek: 'deepseek-chat', nvidia: 'nvidia/llama-3.1-nemotron-70b-instruct' }
 // Multimodal (image-reading) models, tried in order per provider (Scout, then Maverick) so a
 // key that lacks one Llama-4 variant can still fall back to the other. deepseek-chat has no vision.
 const PROVIDER_VISION_MODELS = {
@@ -41,16 +41,27 @@ const hasAnyKey = (s) => !!s.groqKey || !!s.deepseekKey || !!s.nvidiaKey
 // True when at least one image-capable provider key is configured (used to enable image upload in the UI).
 export const visionAvailable = () => visionProviderOrder(getSettings()).length > 0
 
+// Providers report errors in different shapes: OpenAI/Groq/DeepSeek use { error: { message } } (or a bare
+// string); NVIDIA uses RFC-7807 problem+json { title, detail }. Pull a human message from any of them.
+const extractErr = (data) => {
+  if (!data || typeof data !== 'object') return ''
+  if (typeof data.error === 'string') return data.error
+  if (data.error && typeof data.error === 'object') return data.error.message || data.error.detail || ''
+  return data.detail || data.message || data.title || ''
+}
+
 const friendlyError = (provider, status, rawMsg) => {
   const name = PROVIDER_LABEL[provider] || provider
   const msg = String(rawMsg || '').toLowerCase()
-  if (status === 401 || msg.includes('invalid api key') || msg.includes('invalid_api_key') || msg.includes('unauthorized') || msg.includes('authentication')) {
+  if (status === 401 || status === 403 || msg.includes('invalid api key') || msg.includes('invalid_api_key') || msg.includes('unauthorized') || msg.includes('authentication') || msg.includes('authorization failed')) {
     return `${name}: API key rejected (invalid, expired, or wrong key in the ${name} field). Re-copy it from the ${name} dashboard into Settings.`
   }
   if (status === 429 || msg.includes('rate limit') || msg.includes('quota') || msg.includes('insufficient')) {
     return `${name}: rate limit or quota reached. Wait a moment or check your ${name} account credits.`
   }
-  if (msg.includes('model')) return `${name}: model unavailable — ${rawMsg}`
+  if (status === 410 || msg.includes('end of life') || msg.includes('no longer available') || msg.includes('decommission') || msg.includes('model')) {
+    return `${name}: this model is no longer available — ${rawMsg || 'the provider retired it'}.`
+  }
   return `${name}: ${rawMsg || 'request failed'}`
 }
 
@@ -80,7 +91,7 @@ const callProvider = async (provider, apiKey, messages, maxTokens, opts = {}) =>
       }
       throw new Error(`${name}: unexpected non-JSON response (HTTP ${r.status}).`)
     }
-    if (data.error || !r.ok) throw new Error(friendlyError(provider, r.status, data.error?.message || data.error))
+    if (data.error || data.detail || !r.ok) throw new Error(friendlyError(provider, r.status, extractErr(data)))
     const text = data.choices?.[0]?.message?.content
     if (!text) throw new Error(`${PROVIDER_LABEL[provider] || provider}: empty response`)
     return text

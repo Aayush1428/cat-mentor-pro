@@ -152,7 +152,7 @@ export default function Settings({ onSave }) {
       <SectionHeader title="Settings" subtitle="Configure AI providers, news feeds and learning preferences" />
       <KeyInput label="Groq API Key" sub="Free tier available — get key at console.groq.com (GPT-OSS 120B, fastest)" val={groqKey} setVal={setGroqKey} testing={testingG} testResult={testG} onTest={doTestGroq} placeholder="gsk_..." />
       <KeyInput label="DeepSeek API Key" sub="Get key at platform.deepseek.com — deep reasoning, great for explanations" val={deepseekKey} setVal={setDeepseekKey} testing={testingD} testResult={testD} onTest={doTestDeepseek} placeholder="sk-..." />
-      <KeyInput label="NVIDIA API Key" sub="Free credits at build.nvidia.com — runs Llama-3.3 70B (great fallback provider)" val={nvidiaKey} setVal={setNvidiaKey} testing={testingN} testResult={testN} onTest={doTestNvidia} placeholder="nvapi-..." />
+      <KeyInput label="NVIDIA API Key" sub="Free credits at build.nvidia.com — runs Llama-3.1 Nemotron 70B (great fallback provider)" val={nvidiaKey} setVal={setNvidiaKey} testing={testingN} testResult={testN} onTest={doTestNvidia} placeholder="nvapi-..." />
       <Card>
         <p className="text-sm font-semibold text-text-primary mb-2">News Feed Providers</p>
         <p className="text-xs text-text-secondary mb-3">For Times of India / Economic Times / Hindustan Times / finance aggregation, add at least one key below (NewsData is recommended).</p>
