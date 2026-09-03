@@ -19,8 +19,12 @@ const sanitizeHeader = (val) => {
 const PROVIDER_LABEL = { groq: 'Groq', deepseek: 'DeepSeek', nvidia: 'NVIDIA' }
 const PROVIDER_ENDPOINT = { groq: '/api/groq', deepseek: '/api/deepseek', nvidia: '/api/nvidia' }
 const PROVIDER_MODEL = { groq: 'openai/gpt-oss-120b', deepseek: 'deepseek-chat', nvidia: 'meta/llama-3.3-70b-instruct' }
-// Multimodal (image-reading) models. deepseek-chat has no vision, so it is intentionally omitted.
-const PROVIDER_VISION_MODEL = { groq: 'meta-llama/llama-4-scout-17b-16e-instruct', nvidia: 'meta/llama-4-scout-17b-16e-instruct' }
+// Multimodal (image-reading) models, tried in order per provider (Scout, then Maverick) so a
+// key that lacks one Llama-4 variant can still fall back to the other. deepseek-chat has no vision.
+const PROVIDER_VISION_MODELS = {
+  groq: ['meta-llama/llama-4-scout-17b-16e-instruct', 'meta-llama/llama-4-maverick-17b-128e-instruct'],
+  nvidia: ['meta/llama-4-scout-17b-16e-instruct', 'meta/llama-4-maverick-17b-128e-instruct'],
+}
 const VISION_PROVIDERS = ['groq', 'nvidia']
 const PROVIDERS = ['groq', 'deepseek', 'nvidia']
 
@@ -52,7 +56,7 @@ const friendlyError = (provider, status, rawMsg) => {
 
 const callProvider = async (provider, apiKey, messages, maxTokens, opts = {}) => {
   const endpoint = PROVIDER_ENDPOINT[provider]
-  const model = opts.vision ? (PROVIDER_VISION_MODEL[provider] || PROVIDER_MODEL[provider]) : PROVIDER_MODEL[provider]
+  const model = opts.model || PROVIDER_MODEL[provider]
   const cleanKey = sanitizeHeader(apiKey).trim()
   if (!cleanKey) throw new Error(`No ${PROVIDER_LABEL[provider] || provider} API key configured`)
   const body = { model, messages, max_tokens: maxTokens, temperature: 0.2 }
@@ -104,14 +108,32 @@ export const callAI = async (systemPrompt, userMessage, maxTokens = 2000) => {
 export const chatAI = async (systemPrompt, history, maxTokens = 1500, opts = {}) => {
   const s = getSettings()
   if (!hasAnyKey(s)) throw new Error('NO_API_KEY')
-  const order = opts.vision ? visionProviderOrder(s) : providerOrder(s)
-  if (opts.vision && order.length === 0) {
-    throw new Error('Reading an image needs a Groq or NVIDIA API key — their Llama-4 vision models can see images. Add one in Settings, or remove the image and describe the question in text.')
+  const messages = [{ role: 'system', content: systemPrompt }, ...history]
+
+  if (opts.vision) {
+    const order = visionProviderOrder(s)
+    if (order.length === 0) {
+      throw new Error('Reading an image needs a Groq or NVIDIA API key with vision (Llama-4) access. Add one in Settings, or remove the image and type the question instead.')
+    }
+    const errors = []
+    for (const [p, k] of order) {
+      for (const model of PROVIDER_VISION_MODELS[p] || []) {
+        try { return await callProvider(p, k, messages, maxTokens, { vision: true, model }) }
+        catch (e) {
+          errors.push(e.message)
+          // Model missing/no access → try the next candidate model; any other error → next provider.
+          if (!/model|access|exist|not found|decommission/i.test(e.message)) break
+        }
+      }
+    }
+    throw new Error(`Couldn't read the image. ${errors.join(' | ')}`)
   }
+
+  const order = providerOrder(s)
   const errors = []
   for (const [p, k] of order) {
     if (!k) continue
-    try { return await callProvider(p, k, [{ role: 'system', content: systemPrompt }, ...history], maxTokens, { vision: opts.vision }) }
+    try { return await callProvider(p, k, messages, maxTokens) }
     catch (e) { errors.push(e.message) }
   }
   throw new Error(errors.join(' | ') || 'All AI providers failed')
