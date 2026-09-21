@@ -108,10 +108,10 @@ sources/practice/lrdi/di/pie-chart/…
 - Files can be `.jsonl` or `.json` (an array). `id`/`sectionId`/`topicId` are
   optional — inferred/generated. Explicit fields always win.
 
-### Images, PDFs & screenshots (and MBA Pathshala)
+### Images, PDFs, screenshots & Word docs (and MBA Pathshala)
 
-Mostly have PDFs/screenshots? Drop the **images or PDFs** into the same topic
-folders and let a vision LLM transcribe them into `.jsonl`:
+Mostly have PDFs/screenshots/Word docs? Drop the **images, PDFs or `.docx` files**
+into the same topic folders and let a vision LLM transcribe them into `.jsonl`:
 
 ```bash
 npm run dataset:extract -- --dry-run          # preview: what maps to which section/topic (no API)
@@ -119,19 +119,24 @@ GROQ_API_KEY=...  npm run dataset:extract      # or NVIDIA_API_KEY=...
 GROQ_API_KEY=...  npm run dataset:extract:mba  # transcribe public/mba-pathshala/ images
 ```
 
-- Reads `.png/.jpg/.jpeg/.webp` directly, and `.pdf` (each page is rasterized
+- Reads `.png/.jpg/.jpeg/.webp` directly, `.pdf` (each page is rasterized
   in-process — no poppler/ghostscript needed — then sent page-by-page; use
-  `--max-pages`/`--scale` to tune). A scenario PDF with a shared table/image +
-  4-5 questions still works: the extractor asks for every question on the page
-  in one call, so the shared context is embedded in each question's text.
+  `--max-pages`/`--scale` to tune), and `.docx` (typed practice docs — text is
+  read via mammoth, and any pasted data-table image is sent alongside; long docs
+  are auto-split into chunks). A scenario PDF/doc with a shared table/image +
+  4-5 questions still works: the shared context is embedded in each question's text.
 - The API key is read from the environment only, never written to disk
   (deepseek has no vision model — use Groq or NVIDIA).
 - `--mba` maps each image's folder slug to its QA topic via
   [`src/data/mbaPathshala.js`](../src/data/mbaPathshala.js) and writes to
   `sources/mba-pathshala/<slug>/…`.
-- Re-run safely: images already extracted are skipped (use `--force` to redo).
+- Re-run safely: files already extracted are skipped (use `--force` to redo).
 
-After extracting, run `npm run dataset:build && npm run dataset:validate`.
+After extracting, run `npm run dataset:build && npm run dataset:validate`. The
+build also refreshes `public/dataset/pyq_corpus.json`, which the app fetches to
+**ground its generation** — previous-year *and* your own practice material feed
+the Quant "From Papers & My Practice" button, the DILR Daily 5, and the RC
+Trainer's daily passages.
 
 ## Generate more similar questions
 

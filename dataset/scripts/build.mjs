@@ -171,37 +171,49 @@ console.log(`Built dataset: ${all.length} questions`)
 for (const f of files) console.log(`  ${f.file.padEnd(24)} ${f.count}`)
 console.log('Wrote dataset/manifest.json')
 
-// ── Publish a curated previous-year corpus for the app to fetch at runtime ─────
-// Only genuine previous-year sources (source: 'pyq', from dataset/sources/previous-year/,
-// extracted via extract.mjs) — NOT pyqBank/practice/seed, which are original CAT-*level*
-// questions, not real past-paper text. The app uses this to ground "previous-year style"
-// generation and to show which past question(s) a generated one was modeled on.
-const PYQ_SOURCES = new Set(['pyq'])
-const MAX_PER_TOPIC = 6
-const pyqByTopic = {}
+// ── Publish a curated generation corpus for the app to fetch at runtime ────────
+// Real questions the app grounds generation on: genuine previous-year (source 'pyq', from
+// dataset/sources/previous-year/) AND the user's own practice material (source 'practice' /
+// 'needs_practice', from dataset/sources/practice|needs_practice/). NOT pyqBank/seed (those are
+// original CAT-*level* questions we author, not real source material to emulate). Each anchor
+// carries sourceKind so callers can keep "previous-year only" flows honest while daily
+// generators use everything. Grouped by "<sectionId>:<topicId>".
+const SOURCE_KIND = { pyq: 'previous-year', practice: 'practice', needs_practice: 'needs-practice' }
+const MAX_PER_TOPIC = 8
+const genByTopic = {}
 for (const r of all) {
-  if (!PYQ_SOURCES.has(r.source) || !r.topicId) continue
+  const kind = SOURCE_KIND[r.source]
+  if (!kind || !r.topicId) continue
   const k = `${r.sectionId}:${r.topicId}`
-  ;(pyqByTopic[k] ||= []).push({
+  ;(genByTopic[k] ||= []).push({
     question: r.question.slice(0, 700),
     options: r.options,
     correct: r.correct,
     concept: r.concept,
     difficulty: r.difficulty,
-    reference: r.reference || 'CAT previous year',
+    reference: r.reference || (kind === 'previous-year' ? 'CAT previous year' : 'my practice set'),
+    sourceKind: kind,
     topic: r.topic,
     topicId: r.topicId,
     sectionId: r.sectionId,
   })
 }
-for (const k of Object.keys(pyqByTopic)) pyqByTopic[k] = pyqByTopic[k].slice(0, MAX_PER_TOPIC)
+// Prefer previous-year first, then practice, then needs-practice, capped per topic.
+const KIND_ORDER = { 'previous-year': 0, practice: 1, 'needs-practice': 2 }
+for (const k of Object.keys(genByTopic)) {
+  genByTopic[k] = genByTopic[k]
+    .sort((a, b) => KIND_ORDER[a.sourceKind] - KIND_ORDER[b.sourceKind])
+    .slice(0, MAX_PER_TOPIC)
+}
 
 mkdirSync(PUBLIC_DIR, { recursive: true })
-const pyqCorpusCount = Object.values(pyqByTopic).reduce((s, a) => s + a.length, 0)
+const genCorpusCount = Object.values(genByTopic).reduce((s, a) => s + a.length, 0)
+const kindTally = Object.values(genByTopic).flat().reduce((m, a) => ((m[a.sourceKind] = (m[a.sourceKind] || 0) + 1), m), {})
 writeFileSync(join(PUBLIC_DIR, 'pyq_corpus.json'), JSON.stringify({
   generatedAt: new Date().toISOString(),
-  count: pyqCorpusCount,
-  byTopic: pyqByTopic,
+  count: genCorpusCount,
+  byKind: kindTally,
+  byTopic: genByTopic,
 }, null, 2) + '\n')
-console.log(`Wrote public/dataset/pyq_corpus.json (${pyqCorpusCount} previous-year question(s) across ${Object.keys(pyqByTopic).length} topic(s))`)
-if (pyqCorpusCount === 0) console.log('  (empty — extract PDFs under dataset/sources/previous-year/ first: npm run dataset:extract)')
+console.log(`Wrote public/dataset/pyq_corpus.json (${genCorpusCount} anchor question(s) across ${Object.keys(genByTopic).length} topic(s); ${JSON.stringify(kindTally)})`)
+if (genCorpusCount === 0) console.log('  (empty — extract sources under dataset/sources/previous-year/ or /practice first: npm run dataset:extract)')

@@ -4,6 +4,9 @@ dist
 # macOS
 .DS_Store
 
+# Word lock/owner files
+~$*
+
 # MBA Pathshala raw source (multi-GB) — only compressed public/mba-pathshala images are committed
 MBA Pathshala Questions.zip
 MBA Pathshala Questions/

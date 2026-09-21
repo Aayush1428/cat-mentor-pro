@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Card, Badge, SectionHeader, CardSkeleton, showToast, ScoreRing, TimerDisplay, BookmarkButton } from '../components/ui/index.jsx'
 import { callAI, getCachedContent } from '../utils/ai.js'
+import { pyqAnchorsForTopics, formatAnchors } from '../utils/pyq.js'
 import { recordAttempt, getTopicStats } from '../utils/performance.js'
 import { logResult, makeId } from '../utils/bookmarks.js'
 import { addCard } from '../utils/srs.js'
@@ -41,13 +42,13 @@ Return ONLY this JSON:
   ]
 }`
 
-const buildSlotPrompt = (difficulty, genre, focus, angle) => `Generate ONE original, authentic CAT Reading Comprehension passage with questions for daily practice.
+const buildSlotPrompt = (difficulty, genre, focus, angle, anchors) => `Generate ONE original, authentic CAT Reading Comprehension passage with questions for daily practice.
 Write it in the intellectual, essayistic register of long-form publications like Aeon (aeon.co) and Arts & Letters Daily (aldaily.com): a specific, argument-driven thesis with nuance, tension and a counter-view — NOT a generic textbook overview.
 Domain: ${genre}.
 Build the passage specifically around this angle: ${angle}.
 Difficulty: ${difficulty}.${focus ? ` Emphasise ${focus}-type questions — the aspirant is weak there.` : ''}
 Commit to a precise, non-obvious argument. Avoid clichéd, introductory or over-used takes, and do NOT reuse common stock examples. The passage must be ENTIRELY ORIGINAL — never quote, paraphrase or copy any real article.
-Passage length: ${difficulty === 'Hard' ? '550-650' : difficulty === 'Medium' ? '450-550' : '350-450'} words, dense academic CAT style.
+Passage length: ${difficulty === 'Hard' ? '550-650' : difficulty === 'Medium' ? '450-550' : '350-450'} words, dense academic CAT style.${anchors && anchors.length ? `\nCALIBRATE the difficulty, question types and analytical depth to these real CAT RC questions (from previous-year papers and/or your own practice material) — use them ONLY to match CAT's style and rigour; do NOT reuse their passage text, topic or wording (your passage stays on the assigned domain above and must be entirely original):\n${formatAnchors(anchors)}` : ''}
 Return ONLY this JSON:
 {
   "title": "short title",
@@ -635,7 +636,10 @@ function Daily5Tab({ hasApiKey, onNavigate }) {
     setLoading(true)
     try {
       const p = plan[i]
-      const d = await getCachedContent(`rc5b_${today()}_${i}`, SYSTEM, buildSlotPrompt(p.difficulty, p.genre, p.focus, p.angle), 5000)
+      // Calibrate the daily passage's difficulty + question style on real previous-year CAT RC
+      // (from the extracted PYQ corpus) when available; the passage itself stays original.
+      const anchors = await pyqAnchorsForTopics('VARC', ['rc_main_idea', 'rc_inference', 'rc_tone', 'rc_vocab', 'rc_summary'], 4)
+      const d = await getCachedContent(`rc5b_${today()}_${i}`, SYSTEM, buildSlotPrompt(p.difficulty, p.genre, p.focus, p.angle, anchors), 5000)
       setSlot(d)
     } catch (e) { showToast('Error: ' + e.message, 'error') }
     finally { setLoading(false) }

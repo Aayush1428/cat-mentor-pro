@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Card, Badge, SectionHeader, CardSkeleton, showToast, ScoreRing, BookmarkButton } from '../components/ui/index.jsx'
 import { callAI } from '../utils/ai.js'
+import { pyqAnchorsForTopic, formatAnchors } from '../utils/pyq.js'
 import { recordAttempt } from '../utils/performance.js'
 import { logResult } from '../utils/bookmarks.js'
 import LearnPanel from '../components/LearnPanel.jsx'
@@ -23,10 +24,10 @@ Return ONLY a JSON array:
   "difficulty": "${difficulty}"
 }]`
 
-const PYQ_SYSTEM = `You are a CAT Quantitative Aptitude expert who writes NEW original questions closely modeled on real previous-year CAT questions you're shown. Never copy an anchor verbatim — change the numbers/context while keeping the same concept, structure and difficulty. Never claim a new question IS from a real exam year. Return ONLY valid JSON, no preamble.`
+const PYQ_SYSTEM = `You are a CAT Quantitative Aptitude expert who writes NEW original questions closely modeled on the real CAT questions you're shown (previous-year papers and/or the student's own practice material). Never copy an anchor verbatim — change the numbers/context while keeping the same concept, structure and difficulty. Never claim a new question IS from a real exam year. Return ONLY valid JSON, no preamble.`
 
-const buildPYQPrompt = (topic, anchors, count) => `Topic: "${topic}". Here are ${anchors.length} real previous-year CAT question(s) on this topic as style/difficulty anchors:
-${anchors.map((a, i) => `[${i + 1}] (ref: ${a.reference}) ${a.question} Answer: ${a.correct}. Concept: ${a.concept}`).join('\n')}
+const buildPYQPrompt = (topic, anchors, count) => `Topic: "${topic}". Here are ${anchors.length} real CAT question(s) on this topic (from previous-year papers and/or the student's practice sets) as style/difficulty anchors:
+${formatAnchors(anchors)}
 
 Write ${count} NEW original questions, each modeled on one of the anchors above (rotate through them). For each, set "reference" to "Modeled on <that anchor's ref>".
 
@@ -122,11 +123,9 @@ function TopicPractice({ topic, hasApiKey, onNavigate }) {
     if (!hasApiKey) { onNavigate('settings'); return }
     setPyqLoading(true); setQuestions([]); setAnswers({}); setSubmitted(false)
     try {
-      const res = await fetch('/dataset/pyq_corpus.json')
-      const corpus = res.ok ? await res.json() : null
-      const anchors = corpus?.byTopic?.[`QA:${topic.id}`] || []
+      const anchors = await pyqAnchorsForTopic('QA', topic.id, 6)
       if (!anchors.length) {
-        showToast('No previous-year questions ingested for this topic yet — extract PDFs first (see dataset/README.md)', 'error')
+        showToast('No previous-year or practice questions ingested for this topic yet — extract them first (see dataset/README.md)', 'error')
         return
       }
       const d = await callAI(PYQ_SYSTEM, buildPYQPrompt(topic.name, anchors, 5), 3000)
@@ -173,7 +172,7 @@ function TopicPractice({ topic, hasApiKey, onNavigate }) {
           <Calculator size={15}/>{loading?'Generating...':'Generate Questions'}
         </button>
         <button onClick={generateFromPYQ} disabled={loading || pyqLoading} className="w-full py-3 bg-bg-secondary border border-cat-orange/40 text-cat-orange rounded-xl font-semibold hover:bg-cat-orange/10 disabled:opacity-50 transition-all flex items-center justify-center gap-2">
-          <Newspaper size={15}/>{pyqLoading?'Generating...':'Generate 5 — Previous-Year Style'}
+          <Newspaper size={15}/>{pyqLoading?'Generating...':'Generate 5 — From Papers & My Practice'}
         </button>
       </Card>
 

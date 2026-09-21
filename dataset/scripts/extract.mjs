@@ -1,9 +1,10 @@
-// Extract structured questions from IMAGES / screenshots / PDFs using a vision LLM.
+// Extract structured questions from IMAGES / screenshots / PDFs / DOCX using a vision LLM.
 //
-// Reads image files (.png .jpg .jpeg .webp) AND .pdf files under a folder. PDFs are
+// Reads image files (.png .jpg .jpeg .webp), .pdf files, AND .docx files under a folder. PDFs are
 // rasterized page-by-page (pdfjs-dist + @napi-rs/canvas, no system deps like poppler
-// needed) before being sent to the vision model — so a multi-page scenario/PYQ PDF
-// works the same as a screenshot. Writes a sibling `<name>.extracted.jsonl` that
+// needed) before being sent to the vision model. DOCX practice docs are read as text (mammoth)
+// with any embedded data images (jszip) sent alongside — so a Word doc of typed questions, or one
+// with a pasted table image, both work. Writes a sibling `<name>.extracted.jsonl` that
 // `npm run dataset:build` then picks up. Section/topic are taken from the folder path
 // (see dataset/scripts/lib/resolve.mjs); for --mba they come from the slug map in
 // src/data/mbaPathshala.js.
@@ -27,6 +28,8 @@ import { dirname, join, resolve, relative, sep, basename } from 'node:path'
 import { buildResolvers, slugify } from './lib/resolve.mjs'
 import { createCanvas } from '@napi-rs/canvas'
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs'
+import mammoth from 'mammoth'
+import JSZip from 'jszip'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const DATASET_DIR = resolve(scriptDir, '..')
@@ -57,9 +60,11 @@ const PDF_SCALE = args.scale ? Number(args.scale) : 1.6
 
 const IMAGE_RE = /\.(png|jpe?g|webp)$/i
 const PDF_RE = /\.pdf$/i
-const SOURCE_RE = /\.(png|jpe?g|webp|pdf)$/i
+const DOCX_RE = /\.docx$/i
+const SOURCE_RE = /\.(png|jpe?g|webp|pdf|docx)$/i
 const MIME = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp' }
 const NVIDIA_MAX_B64 = 180000 // integrate.api.nvidia.com inline-image cap (~180KB)
+const DOCX_CHUNK = 6000 // split large docs into ~6k-char chunks so each call fits the token budget
 const STANDARD_FONTS_URL = pathToFileURL(join(ROOT, 'node_modules/pdfjs-dist/standard_fonts') + sep).href
 
 // ── PDF → page images (no poppler/ghostscript needed) ────────────────────────────
@@ -104,6 +109,36 @@ const renderPdfPages = async (pdfPath) => {
   }
   if (doc.cleanup) await doc.cleanup()
   return { buffers, totalPages }
+}
+
+// ── DOCX → text + embedded images ────────────────────────────────────────────────
+const readDocx = async (docxPath) => {
+  const buf = readFileSync(docxPath)
+  let text = ''
+  try { text = (await mammoth.extractRawText({ buffer: buf })).value.trim() } catch { text = '' }
+  const images = []
+  try {
+    const zip = await JSZip.loadAsync(buf)
+    for (const name of Object.keys(zip.files)) {
+      if (/word\/media\/.*\.(png|jpe?g|webp)$/i.test(name)) images.push(await zip.files[name].async('nodebuffer'))
+    }
+  } catch { /* no media */ }
+  return { text, images }
+}
+
+// Split long doc text into ~DOCX_CHUNK-char chunks on line boundaries so each call fits the budget.
+const chunkText = (text) => {
+  if (text.length <= DOCX_CHUNK) return [text]
+  const chunks = []
+  let rest = text
+  while (rest.length > DOCX_CHUNK) {
+    let cut = rest.lastIndexOf('\n', DOCX_CHUNK)
+    if (cut < DOCX_CHUNK * 0.5) cut = DOCX_CHUNK
+    chunks.push(rest.slice(0, cut))
+    rest = rest.slice(cut)
+  }
+  if (rest.trim()) chunks.push(rest)
+  return chunks
 }
 
 // ── provider / key ───────────────────────────────────────────────────────────────
@@ -160,6 +195,7 @@ const walkImages = (dir) => {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const full = join(dir, entry.name)
     if (entry.isDirectory()) out.push(...walkImages(full))
+    else if (entry.name.startsWith('~$')) continue // Word lock/owner file, not a real doc
     else if (SOURCE_RE.test(entry.name)) out.push(full)
   }
   return out
@@ -168,6 +204,7 @@ const walkImages = (dir) => {
 const planFor = (imgPath) => {
   const dir = dirname(imgPath)
   const isPdf = PDF_RE.test(imgPath)
+  const isDocx = DOCX_RE.test(imgPath)
   const base = basename(imgPath).replace(SOURCE_RE, '')
   const underSources = imgPath.startsWith(SOURCES_DIR + sep)
 
@@ -191,11 +228,24 @@ const planFor = (imgPath) => {
       ? join(dir, base + '.extracted.jsonl')
       : join(SOURCES_DIR, '_extracted', slugify(basename(targetDir)), relative(targetDir, imgPath)).replace(SOURCE_RE, '.extracted.jsonl')
   }
-  return { imgPath, outPath, sectionId, topicId, topic, source, base, isPdf }
+  return { imgPath, outPath, sectionId, topicId, topic, source, base, isPdf, isDocx }
 }
 
 // ── vision call ──────────────────────────────────────────────────────────────────
 const SYSTEM = 'You are a CAT exam expert who transcribes question images into structured JSON. Return ONLY a JSON array — no markdown, no preamble.'
+
+// Prompt for a DOCX text chunk (typed practice questions; images, if any, are attached too).
+const docxPromptFor = (p, text, hasImage) =>
+  `The following is text from a practice document of CAT ${p.sectionId || ''} question(s)${p.topic ? ` on "${p.topic}"` : ''}. ` +
+  `${hasImage ? 'An accompanying image contains a data table/figure the questions refer to — read it and fold that data into the questions. ' : ''}` +
+  `Transcribe EACH complete question into an object with keys: ` +
+  `"question" (full self-contained text; for RC/DILR embed the passage/data set — including any table shown in the image — INSIDE the question), ` +
+  `"options" (array ["A) ...","B) ...","C) ...","D) ..."]; [] if not multiple-choice), ` +
+  `"correct" ("A"|"B"|"C"|"D", or the exact answer for non-MCQ; if the document gives an answer key use it, else solve it), ` +
+  `"difficulty" ("Easy"|"Medium"|"Hard"), "concept" (idea tested), "solution" (concise worked solution), ` +
+  `"topicLabel" (topic name if the document states one for the question, else ""), ` +
+  `"reference" (any set/test id printed, e.g. "RC #130" or "LR SET #176", else ""). ` +
+  `Ignore headers/instructions that are not themselves questions. Preserve math as plain text. Return ONLY a JSON array of these objects.\n\nDOCUMENT TEXT:\n"""${text}"""`
 
 const promptFor = (p) =>
   `This image contains one or more CAT-style ${p.sectionId || ''} practice questions${p.topic ? ` on "${p.topic}"` : ''}. ` +
@@ -215,7 +265,9 @@ const parseJSON = (text) => {
   return JSON.parse(s)
 }
 
-const callVision = async (dataUrl, text) => {
+// Runs one OpenAI-style `content` array (text and/or image_url parts) through the model,
+// falling through candidate models on a model-unavailable error. Returns the parsed JSON array.
+const callModel = async (content, maxTokens = 3000) => {
   let lastErr
   for (const model of models) {
     try {
@@ -226,10 +278,10 @@ const callVision = async (dataUrl, text) => {
           model,
           messages: [
             { role: 'system', content: SYSTEM },
-            { role: 'user', content: [{ type: 'text', text }, { type: 'image_url', image_url: { url: dataUrl } }] },
+            { role: 'user', content },
           ],
           temperature: 0.2,
-          max_tokens: 2000,
+          max_tokens: maxTokens,
           stream: false,
         }),
       })
@@ -241,15 +293,17 @@ const callVision = async (dataUrl, text) => {
         if (/model|access|exist|not found|decommission|gone|retired/i.test(msg)) { lastErr = new Error(msg); continue }
         throw new Error(msg)
       }
-      const content = data?.choices?.[0]?.message?.content
-      return parseJSON(content)
+      const out = data?.choices?.[0]?.message?.content
+      return parseJSON(out)
     } catch (e) {
       lastErr = e
       if (!/model|access|exist|not found/i.test(e.message)) break
     }
   }
-  throw lastErr || new Error('vision call failed')
+  throw lastErr || new Error('model call failed')
 }
+
+const callVision = (dataUrl, text) => callModel([{ type: 'text', text }, { type: 'image_url', image_url: { url: dataUrl } }], 2000)
 
 // Some PYQ sources print a broad, catch-all label (e.g. plain "Geometry" covering triangles,
 // circles, mensuration, coordinate geometry...) that happens to substring-match ONE specific
@@ -290,14 +344,15 @@ const toRecord = (raw, p, i, pageNum) => {
 
 // ── run ──────────────────────────────────────────────────────────────────────────
 const images = walkImages(targetDir)
-if (!images.length) { console.log(`No images or PDFs found under ${relative(ROOT, targetDir) || targetDir}`); process.exit(0) }
+if (!images.length) { console.log(`No images, PDFs or DOCX files found under ${relative(ROOT, targetDir) || targetDir}`); process.exit(0) }
 
 const plans = images.map(planFor).filter((p) => FORCE || !existsSync(p.outPath))
 const skippedExisting = images.length - plans.length
 const pdfCount = plans.filter((p) => p.isPdf).length
+const docxCount = plans.filter((p) => p.isDocx).length
 
 console.log(`${DRY ? '[dry-run] ' : ''}${images.length} file(s) under ${relative(ROOT, targetDir) || targetDir}` +
-  `${pdfCount ? ` (${pdfCount} PDF)` : ''}` +
+  `${pdfCount || docxCount ? ` (${[pdfCount && `${pdfCount} PDF`, docxCount && `${docxCount} DOCX`].filter(Boolean).join(', ')})` : ''}` +
   `${skippedExisting ? `, ${skippedExisting} already extracted` : ''}` +
   `${DRY || !provider ? '' : `, using ${providerName} (${models[0]})`}`)
 
@@ -314,6 +369,13 @@ if (DRY) {
         const n = await pdfPageCount(p.imgPath)
         console.log(`      (PDF, ${n} page${n === 1 ? '' : 's'}${n > MAX_PAGES ? `, only first ${MAX_PAGES} will be rendered — use --max-pages` : ''})`)
       } catch (e) { console.log(`      ! could not read PDF page count: ${e.message}`) }
+    }
+    if (p.isDocx) {
+      try {
+        const { text, images: imgs } = await readDocx(p.imgPath)
+        const ch = chunkText(text || '')
+        console.log(`      (DOCX, ${text.length} chars${ch.length > 1 ? ` → ${ch.length} chunks` : ''}${imgs.length ? `, ${imgs.length} embedded image(s)` : ''})`)
+      } catch (e) { console.log(`      ! could not read docx: ${e.message}`) }
     }
     console.log(`      → ${relative(ROOT, p.outPath)}  [${p.sectionId || '??'} · ${p.topic || '??'} · ${p.source}]`)
   }
@@ -342,6 +404,33 @@ const extractBuffer = async (buf, mime, p, i, pageNum) => {
   return (Array.isArray(arr) ? arr : []).map((r, j) => toRecord(r, p, i + j, pageNum)).filter((r) => r.question)
 }
 
+// Reads a DOCX (typed text + embedded data images) → dataset records; long docs are chunked and
+// any embedded images are attached to the first chunk so the model sees the data table/figure.
+const extractDocx = async (p) => {
+  const { text, images: imgs } = await readDocx(p.imgPath)
+  if (!text && !imgs.length) return []
+  const imageParts = []
+  for (const img of imgs.slice(0, 3)) {
+    const b64 = img.toString('base64')
+    if (providerName === 'nvidia' && b64.length > NVIDIA_MAX_B64) {
+      console.warn(`  ! ${relative(ROOT, p.imgPath)} embedded image too large for NVIDIA inline (${(b64.length / 1024) | 0}KB) — skipping that image; use --provider groq`)
+      continue
+    }
+    imageParts.push({ type: 'image_url', image_url: { url: `data:image/png;base64,${b64}` } })
+  }
+  const chunks = text ? chunkText(text) : ['']
+  let records = []
+  for (let c = 0; c < chunks.length; c++) {
+    const content = [{ type: 'text', text: docxPromptFor(p, chunks[c], c === 0 && imageParts.length > 0) }]
+    if (c === 0) content.push(...imageParts)
+    const arr = await callModel(content, 3500)
+    const recs = (Array.isArray(arr) ? arr : []).map((r, j) => toRecord(r, p, records.length + j, chunks.length > 1 ? c + 1 : null)).filter((r) => r.question)
+    if (!recs.length) console.warn(`  ! no questions parsed from ${relative(ROOT, p.imgPath)}${chunks.length > 1 ? ` chunk ${c + 1}/${chunks.length}` : ''}`)
+    records = records.concat(recs)
+  }
+  return records
+}
+
 let done = 0, wrote = 0, failed = 0
 for (const p of plans) {
   if (done >= LIMIT) break
@@ -357,6 +446,8 @@ for (const p of plans) {
         if (!pageRecords.length) console.warn(`  ! no questions parsed from ${relative(ROOT, p.imgPath)} page ${pg + 1}`)
         records = records.concat(pageRecords)
       }
+    } else if (p.isDocx) {
+      records = await extractDocx(p)
     } else {
       const ext = p.imgPath.split('.').pop().toLowerCase()
       records = await extractBuffer(readFileSync(p.imgPath), MIME[ext] || 'image/jpeg', p, 0, null)

@@ -1,7 +1,30 @@
 {
-  "generatedAt": "2026-09-21T20:57:08.656Z",
-  "count": 1,
+  "generatedAt": "2026-09-21T21:37:59.807Z",
+  "count": 3,
+  "byKind": {
+    "practice": 2,
+    "previous-year": 1
+  },
   "byTopic": {
+    "DILR:di_pie": [
+      {
+        "question": "A pie chart shows a household's monthly budget: Rent 30%, Food 25%, Travel 15%, Savings 20%, Others 10%. If the monthly income is ₹40,000, how much is saved each month?",
+        "options": [
+          "A) ₹6,000",
+          "B) ₹8,000",
+          "C) ₹10,000",
+          "D) ₹12,000"
+        ],
+        "correct": "B",
+        "concept": "Reading a percentage share from a pie chart",
+        "difficulty": "Easy",
+        "reference": "my practice set",
+        "sourceKind": "practice",
+        "topic": "DI — Pie Charts",
+        "topicId": "di_pie",
+        "sectionId": "DILR"
+      }
+    ],
     "QA:qa_percentages": [
       {
         "question": "A number, when increased by 20%, becomes 96. What is the number?",
@@ -15,9 +38,29 @@
         "concept": "Reverse percentage",
         "difficulty": "Easy",
         "reference": "CAT previous year",
+        "sourceKind": "previous-year",
         "topic": "Percentages",
         "topicId": "qa_percentages",
         "sectionId": "QA"
+      }
+    ],
+    "VARC:vocab_words": [
+      {
+        "question": "Select the word that best fills the blank: Despite the setback, her ____ optimism never wavered.",
+        "options": [
+          "A) fickle",
+          "B) unflagging",
+          "C) tepid",
+          "D) waning"
+        ],
+        "correct": "B",
+        "concept": "Word usage in context",
+        "difficulty": "Medium",
+        "reference": "my practice set",
+        "sourceKind": "practice",
+        "topic": "Word Usage & Fill-in-Blanks",
+        "topicId": "vocab_words",
+        "sectionId": "VARC"
       }
     ]
   }
