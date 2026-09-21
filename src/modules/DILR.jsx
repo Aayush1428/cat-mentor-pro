@@ -93,6 +93,7 @@ function SetPractice({ topic, topicId, dynamic, hasApiKey, onNavigate }) {
   const [answers, setAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [showApproach, setShowApproach] = useState(false)
+  const [startedAt, setStartedAt] = useState(null)
 
   const generate = async () => {
     if (!hasApiKey) { onNavigate('settings'); return }
@@ -108,6 +109,7 @@ function SetPractice({ topic, topicId, dynamic, hasApiKey, onNavigate }) {
       }
       const d = await callAI(SYSTEM, prompt, 2200)
       setData(d)
+      setStartedAt(Date.now())
     } catch (e) { showToast('Error: ' + e.message, 'error') }
     finally { setLoading(false) }
   }
@@ -116,9 +118,10 @@ function SetPractice({ topic, topicId, dynamic, hasApiKey, onNavigate }) {
     setSubmitted(true)
     const qs = data.questions || []
     const context = data.setup || data.caselet || data.context || ''
+    const timeSec = startedAt ? Math.round((Date.now() - startedAt) / 1000 / Math.max(1, qs.length)) : 0
     qs.forEach((q,i) => {
       const correct = answers[i] === q.correct
-      recordAttempt('DILR', topic, correct)
+      recordAttempt('DILR', topic, correct, timeSec)
       logResult({ section: 'DILR', topic, source: 'dilr', stem: context ? `${context}\n\nQ: ${q.q}` : q.q, options: q.options, answer: q.correct, explanation: q.explanation, isCorrect: correct })
     })
     const score = qs.filter((q,i) => answers[i] === q.correct).length

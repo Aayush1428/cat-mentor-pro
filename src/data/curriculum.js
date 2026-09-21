@@ -18,6 +18,7 @@ export const SECTIONS = {
       { id: 'para_jumble',    name: 'Para Jumbles (PJ)',                priority: 1, weight: 'High',   marks: 4,  tags: ['VA'] },
       { id: 'para_summary',   name: 'Para Summary',                     priority: 1, weight: 'High',   marks: 4,  tags: ['VA'] },
       { id: 'odd_sentence',   name: 'Odd Sentence Out',                 priority: 2, weight: 'Medium', marks: 4,  tags: ['VA'] },
+      { id: 'sentence_insertion', name: 'Sentence Insertion',           priority: 2, weight: 'Medium', marks: 4,  tags: ['VA'] },
       // Vocabulary
       { id: 'vocab_synonyms', name: 'Vocabulary — Synonyms/Antonyms',  priority: 2, weight: 'Medium', marks: 0,  tags: ['Vocab'] },
       { id: 'vocab_idioms',   name: 'Idioms & Phrases',                 priority: 3, weight: 'Medium', marks: 0,  tags: ['Vocab'] },
@@ -42,6 +43,8 @@ export const SECTIONS = {
       { id: 'di_pie',         name: 'DI — Pie Charts',                 priority: 1, weight: 'High',   tags: ['DI'] },
       { id: 'di_caselet',     name: 'DI — Caselets (Text-based DI)',   priority: 2, weight: 'High',   tags: ['DI'] },
       { id: 'di_network',     name: 'DI — Network / Route Diagrams',   priority: 2, weight: 'Medium', tags: ['DI'] },
+      { id: 'di_calculative', name: 'DI — Calculative Sets',           priority: 1, weight: 'High',   tags: ['DI'] },
+      { id: 'di_logical',     name: 'DI — Logical DI',                 priority: 2, weight: 'High',   tags: ['DI'] },
       // LR
       { id: 'lr_seating',     name: 'LR — Seating Arrangements',       priority: 1, weight: 'High',   tags: ['LR'] },
       { id: 'lr_games',       name: 'LR — Games & Tournaments',        priority: 1, weight: 'High',   tags: ['LR'] },
@@ -51,6 +54,9 @@ export const SECTIONS = {
       { id: 'lr_coins',       name: 'LR — Coins & Weights',            priority: 2, weight: 'Medium', tags: ['LR'] },
       { id: 'lr_blood',       name: 'LR — Blood Relations',            priority: 3, weight: 'Low',    tags: ['LR'] },
       { id: 'lr_directions',  name: 'LR — Directions & Distances',     priority: 3, weight: 'Low',    tags: ['LR'] },
+      { id: 'lr_coding_decoding', name: 'LR — Coding-Decoding',         priority: 2, weight: 'Medium', tags: ['LR'] },
+      { id: 'lr_distribution', name: 'LR — Distribution',              priority: 2, weight: 'Medium', tags: ['LR'] },
+      { id: 'lr_puzzles',     name: 'LR — Puzzles',                    priority: 2, weight: 'High',   tags: ['LR'] },
     ],
   },
 

@@ -4,8 +4,9 @@ import { callAI } from '../utils/ai.js'
 import { recordAttempt } from '../utils/performance.js'
 import { logResult } from '../utils/bookmarks.js'
 import LearnPanel from '../components/LearnPanel.jsx'
+import QuestionComposer from '../components/QuestionComposer.jsx'
 import { SECTIONS } from '../data/curriculum.js'
-import { Calculator, ChevronRight, RotateCcw, CheckCircle, XCircle } from 'lucide-react'
+import { Calculator, ChevronRight, RotateCcw, CheckCircle, XCircle, Newspaper } from 'lucide-react'
 
 const SYSTEM = `You are a CAT Quantitative Aptitude expert. All questions must be solvable with the given data, mathematically correct, and at the appropriate CAT difficulty. Solutions must be step-by-step with correct arithmetic. Return ONLY valid JSON, no preamble.`
 
@@ -22,6 +23,24 @@ Return ONLY a JSON array:
   "difficulty": "${difficulty}"
 }]`
 
+const PYQ_SYSTEM = `You are a CAT Quantitative Aptitude expert who writes NEW original questions closely modeled on real previous-year CAT questions you're shown. Never copy an anchor verbatim — change the numbers/context while keeping the same concept, structure and difficulty. Never claim a new question IS from a real exam year. Return ONLY valid JSON, no preamble.`
+
+const buildPYQPrompt = (topic, anchors, count) => `Topic: "${topic}". Here are ${anchors.length} real previous-year CAT question(s) on this topic as style/difficulty anchors:
+${anchors.map((a, i) => `[${i + 1}] (ref: ${a.reference}) ${a.question} Answer: ${a.correct}. Concept: ${a.concept}`).join('\n')}
+
+Write ${count} NEW original questions, each modeled on one of the anchors above (rotate through them). For each, set "reference" to "Modeled on <that anchor's ref>".
+
+Return ONLY a JSON array:
+[{
+  "question": "full question text with all data",
+  "options": ["A) value","B) value","C) value","D) value"],
+  "correct": "A|B|C|D",
+  "solution": "step-by-step solution with calculations",
+  "concept": "the specific formula or concept used",
+  "reference": "Modeled on <anchor ref>",
+  "difficulty": "Easy|Medium|Hard"
+}]`
+
 const TAG_COLORS = { Arithmetic: 'orange', Numbers: 'blue', Algebra: 'purple', Geometry: 'green', Modern: 'pink' }
 
 function QuestionCard({ q, idx, topic, selected, onSelect, submitted }) {
@@ -33,7 +52,10 @@ function QuestionCard({ q, idx, topic, selected, onSelect, submitted }) {
       <div className="flex items-start gap-2 mb-3">
         <span className="text-xs font-mono text-cat-green font-bold flex-shrink-0">Q{idx+1}</span>
         <div className="flex-1">
-          <Badge variant={TAG_COLORS[q.concept?.split(' ')[0]] || 'gray'} className="mb-2">{q.concept}</Badge>
+          <div className="flex items-center gap-1.5 flex-wrap mb-2">
+            <Badge variant={TAG_COLORS[q.concept?.split(' ')[0]] || 'gray'}>{q.concept}</Badge>
+            {q.reference && <Badge variant="orange">📎 {q.reference}</Badge>}
+          </div>
           <p className="text-sm font-medium text-text-primary leading-relaxed whitespace-pre-line">{q.question}</p>
         </div>
         <BookmarkButton item={{ section: 'QA', topic, source: 'quant', stem: q.question, options: q.options, answer: q.correct, explanation: q.solution }} />
@@ -76,8 +98,10 @@ function TopicPractice({ topic, hasApiKey, onNavigate }) {
   const [count, setCount] = useState(5)
   const [questions, setQuestions] = useState([])
   const [loading, setLoading] = useState(false)
+  const [pyqLoading, setPyqLoading] = useState(false)
   const [answers, setAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
+  const [startedAt, setStartedAt] = useState(null)
 
   const generate = async () => {
     if (!hasApiKey) { onNavigate('settings'); return }
@@ -85,15 +109,39 @@ function TopicPractice({ topic, hasApiKey, onNavigate }) {
     try {
       const d = await callAI(SYSTEM, buildQAPrompt(topic.name, difficulty, count), 2500)
       setQuestions(Array.isArray(d) ? d : [])
+      setStartedAt(Date.now())
     } catch (e) { showToast('Error: ' + e.message, 'error') }
     finally { setLoading(false) }
   }
 
+  // Grounds generation on real previous-year questions for this topic (extracted from PDFs
+  // under dataset/sources/previous-year/ via `npm run dataset:extract`, published by
+  // `npm run dataset:build` to public/dataset/pyq_corpus.json). Each question cites which
+  // past question it was modeled on.
+  const generateFromPYQ = async () => {
+    if (!hasApiKey) { onNavigate('settings'); return }
+    setPyqLoading(true); setQuestions([]); setAnswers({}); setSubmitted(false)
+    try {
+      const res = await fetch('/dataset/pyq_corpus.json')
+      const corpus = res.ok ? await res.json() : null
+      const anchors = corpus?.byTopic?.[`QA:${topic.id}`] || []
+      if (!anchors.length) {
+        showToast('No previous-year questions ingested for this topic yet — extract PDFs first (see dataset/README.md)', 'error')
+        return
+      }
+      const d = await callAI(PYQ_SYSTEM, buildPYQPrompt(topic.name, anchors, 5), 3000)
+      setQuestions(Array.isArray(d) ? d : [])
+      setStartedAt(Date.now())
+    } catch (e) { showToast('Error: ' + e.message, 'error') }
+    finally { setPyqLoading(false) }
+  }
+
   const submit = () => {
     setSubmitted(true)
+    const timeSec = startedAt ? Math.round((Date.now() - startedAt) / 1000 / Math.max(1, questions.length)) : 0
     questions.forEach((q,i) => {
       const correct = answers[i] === q.correct
-      recordAttempt('QA', topic.name, correct)
+      recordAttempt('QA', topic.name, correct, timeSec)
       logResult({ section: 'QA', topic: topic.name, source: 'quant', stem: q.question, options: q.options, answer: q.correct, explanation: q.solution, isCorrect: correct })
     })
     const score = questions.filter((q,i) => answers[i] === q.correct).length
@@ -121,14 +169,17 @@ function TopicPractice({ topic, hasApiKey, onNavigate }) {
         <div><p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">No. of Questions</p>
           <div className="flex gap-2">{[3,5,10].map(n=><button key={n} onClick={()=>setCount(n)} className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all ${count===n?'bg-cat-green text-white border-cat-green':'border-border text-text-secondary'}`}>{n}</button>)}</div>
         </div>
-        <button onClick={generate} disabled={loading} className="w-full py-3 bg-cat-green text-white rounded-xl font-semibold hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2">
+        <button onClick={generate} disabled={loading || pyqLoading} className="w-full py-3 bg-cat-green text-white rounded-xl font-semibold hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2">
           <Calculator size={15}/>{loading?'Generating...':'Generate Questions'}
+        </button>
+        <button onClick={generateFromPYQ} disabled={loading || pyqLoading} className="w-full py-3 bg-bg-secondary border border-cat-orange/40 text-cat-orange rounded-xl font-semibold hover:bg-cat-orange/10 disabled:opacity-50 transition-all flex items-center justify-center gap-2">
+          <Newspaper size={15}/>{pyqLoading?'Generating...':'Generate 5 — Previous-Year Style'}
         </button>
       </Card>
 
-      {loading && <>{[...Array(3)].map((_,i)=><CardSkeleton key={i}/>)}</>}
+      {(loading || pyqLoading) && <>{[...Array(3)].map((_,i)=><CardSkeleton key={i}/>)}</>}
 
-      {questions.length > 0 && !loading && (
+      {questions.length > 0 && !loading && !pyqLoading && (
         <>
           {submitted && (
             <div className="flex items-center gap-4 p-4 bg-bg-card border border-border rounded-xl">
@@ -183,6 +234,8 @@ export default function Quant({ hasApiKey, onNavigate }) {
   return (
     <div className="animate-fade-in max-w-3xl space-y-5">
       <SectionHeader title="Quantitative Aptitude" subtitle="All QA topics — priority order from most to least important for CAT" />
+
+      <QuestionComposer hasApiKey={hasApiKey} onNavigate={onNavigate} />
 
       <div className="flex gap-2 flex-wrap">
         {allTags.map(tag => (

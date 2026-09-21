@@ -1,6 +1,6 @@
 const getSettings = () => { try { return JSON.parse(localStorage.getItem('cat_settings') || '{}') } catch { return {} } }
 
-const parseJSON = (raw) => {
+export const parseJSON = (raw) => {
   try { return JSON.parse(raw) } catch {
     const clean = raw.replace(/```json\n?|```\n?/g, '').trim()
     const s = clean.search(/[{\[]/)
@@ -19,6 +19,22 @@ const sanitizeHeader = (val) => {
 const PROVIDER_LABEL = { groq: 'Groq', deepseek: 'DeepSeek', nvidia: 'NVIDIA' }
 const PROVIDER_ENDPOINT = { groq: '/api/groq', deepseek: '/api/deepseek', nvidia: '/api/nvidia' }
 const PROVIDER_MODEL = { groq: 'openai/gpt-oss-120b', deepseek: 'deepseek-chat', nvidia: 'nvidia/llama-3.1-nemotron-70b-instruct' }
+// NVIDIA keeps retiring / account-gating individual models (a dead one returns 410 Gone, or
+// "Function <id>: Not found for account <id>" when the model's Cloud Function isn't served to
+// your account), so text calls try several live instruct models in order and fall back to the
+// next when one isn't available. groq/deepseek each have a single model.
+const PROVIDER_TEXT_MODELS = {
+  nvidia: [
+    'nvidia/llama-3.1-nemotron-70b-instruct',
+    'nvidia/llama-3.1-nemotron-51b-instruct',
+    'mistralai/mistral-large-2-instruct',
+    'google/gemma-3-12b-it',
+  ],
+}
+const textModelsFor = (provider) => PROVIDER_TEXT_MODELS[provider] || [PROVIDER_MODEL[provider]]
+// True when an error means "this specific model is unavailable" so the caller should try the next
+// candidate model rather than abandoning the whole provider (a retired/gated/absent model).
+const isModelError = (msg) => /\bmodel\b|access|exist|not found|decommission|gone|retired|no longer/i.test(String(msg))
 // Multimodal (image-reading) models, tried in order per provider (Scout, then Maverick) so a
 // key that lacks one Llama-4 variant can still fall back to the other. deepseek-chat has no vision.
 const PROVIDER_VISION_MODELS = {
@@ -58,6 +74,13 @@ const friendlyError = (provider, status, rawMsg) => {
   }
   if (status === 429 || msg.includes('rate limit') || msg.includes('quota') || msg.includes('insufficient')) {
     return `${name}: rate limit or quota reached. Wait a moment or check your ${name} account credits.`
+  }
+  // HTTP 404 "Function <id>: Not found for account <id>" means auth PASSED but the account's org
+  // lacks the "Public API Endpoints" entitlement, so no hosted model can be invoked (a widespread
+  // build.nvidia.com issue; a new key won't fix it). Keep "model" so the fallback loop still tries
+  // the other candidates, in case only some models are gated for this account.
+  if (msg.includes('not found for account') || (msg.includes('function') && msg.includes('not found'))) {
+    return `${name}: your account can't call hosted models yet — the "Public API Endpoints" permission isn't enabled for your NVIDIA org (a known build.nvidia.com issue; regenerating the key won't help). Ask NVIDIA to enable it, or just use Groq/DeepSeek. (model unavailable)`
   }
   if (status === 410 || msg.includes('end of life') || msg.includes('no longer available') || msg.includes('decommission') || msg.includes('model')) {
     return `${name}: this model is no longer available — ${rawMsg || 'the provider retired it'}.`
@@ -108,12 +131,17 @@ export const callAI = async (systemPrompt, userMessage, maxTokens = 2000) => {
   const errors = []
   for (const [p, k] of order) {
     if (!k) continue
-    try {
-      const raw = await callProvider(p, k, [{ role: 'system', content: systemPrompt }, { role: 'user', content: userMessage }], maxTokens)
-      return parseJSON(raw)
-    } catch (e) { errors.push(e.message) }
+    for (const model of textModelsFor(p)) {
+      try {
+        const raw = await callProvider(p, k, [{ role: 'system', content: systemPrompt }, { role: 'user', content: userMessage }], maxTokens, { model })
+        return parseJSON(raw)
+      } catch (e) {
+        errors.push(e.message)
+        if (!isModelError(e.message)) break // auth/rate-limit/network — other models on this provider won't help
+      }
+    }
   }
-  throw new Error(errors.join(' | ') || 'All AI providers failed')
+  throw new Error([...new Set(errors)].join(' | ') || 'All AI providers failed')
 }
 
 export const chatAI = async (systemPrompt, history, maxTokens = 1500, opts = {}) => {
@@ -144,10 +172,15 @@ export const chatAI = async (systemPrompt, history, maxTokens = 1500, opts = {})
   const errors = []
   for (const [p, k] of order) {
     if (!k) continue
-    try { return await callProvider(p, k, messages, maxTokens) }
-    catch (e) { errors.push(e.message) }
+    for (const model of textModelsFor(p)) {
+      try { return await callProvider(p, k, messages, maxTokens, { model }) }
+      catch (e) {
+        errors.push(e.message)
+        if (!isModelError(e.message)) break
+      }
+    }
   }
-  throw new Error(errors.join(' | ') || 'All AI providers failed')
+  throw new Error([...new Set(errors)].join(' | ') || 'All AI providers failed')
 }
 
 export const getCachedContent = async (key, system, user, maxTokens = 2000) => {
@@ -164,4 +197,11 @@ export const clearAllCache = () => Object.keys(localStorage).filter(k => k.start
 
 export const testGroqConnection = async (k) => { await callProvider('groq', k, [{ role: 'user', content: 'Say OK' }], 64); return true }
 export const testDeepseekConnection = async (k) => { await callProvider('deepseek', k, [{ role: 'user', content: 'Say OK' }], 10); return true }
-export const testNvidiaConnection = async (k) => { await callProvider('nvidia', k, [{ role: 'user', content: 'Say OK' }], 16); return true }
+export const testNvidiaConnection = async (k) => {
+  const errors = []
+  for (const model of textModelsFor('nvidia')) {
+    try { await callProvider('nvidia', k, [{ role: 'user', content: 'Say OK' }], 16, { model }); return true }
+    catch (e) { errors.push(e.message); if (!isModelError(e.message)) break }
+  }
+  throw new Error([...new Set(errors)].join(' | '))
+}

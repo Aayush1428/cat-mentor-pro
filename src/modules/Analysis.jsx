@@ -2,14 +2,71 @@ import React, { useState } from 'react'
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell, LineChart, Line, CartesianGrid } from 'recharts'
 import { Card, SectionHeader, Badge, ProgressBar } from '../components/ui/index.jsx'
 import { SECTIONS } from '../data/curriculum.js'
-import { getTopicStats, getAccuracy, getStrengthLabel, getStrengthColor, getDailyHistory, getMockHistory } from '../utils/performance.js'
+import { getTopicStats, getAccuracy, getAvgTime, getStrengthLabel, getStrengthColor, getDailyHistory, getMockHistory, getOverallStats, getImprovementInsights } from '../utils/performance.js'
+import { Zap, Target, TrendingDown, TrendingUp } from 'lucide-react'
+
+const VERDICT_COPY = {
+  'weak-slow': { label: 'Weak & Slow', color: 'red', tip: 'Below-average accuracy AND slower than your own average — revisit the fundamentals before drilling for speed.' },
+  weak: { label: 'Needs Accuracy', color: 'orange', tip: 'Accuracy is the bigger gap here — re-learn the concept, then re-attempt.' },
+  slow: { label: 'Needs Speed', color: 'blue', tip: "You're getting these right, just too slowly — timed drills will help." },
+  strong: { label: 'On Track', color: 'green', tip: 'Keep this up — low priority for now.' },
+}
+
+function ImprovementFocus() {
+  const overall = getOverallStats()
+  const insights = getImprovementInsights(6)
+  if (overall.totalAttempts === 0) return null
+  return (
+    <Card>
+      <p className="text-sm font-semibold text-text-primary mb-1">Speed, Accuracy & What To Improve</p>
+      <p className="text-[10px] text-text-muted mb-3">Based on {overall.totalAttempts} attempted questions across all sections</p>
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="text-center">
+          <p className="text-[10px] text-text-muted mb-1 flex items-center justify-center gap-1"><Target size={11}/> Accuracy</p>
+          <p className="font-mono text-xl font-bold text-cat-green">{overall.accuracy}%</p>
+        </div>
+        <div className="text-center">
+          <p className="text-[10px] text-text-muted mb-1 flex items-center justify-center gap-1"><Zap size={11}/> Avg Speed</p>
+          <p className="font-mono text-xl font-bold text-cat-blue">{overall.avgTimeSec !== null ? `${overall.avgTimeSec}s/q` : '—'}</p>
+        </div>
+        <div className="text-center">
+          <p className="text-[10px] text-text-muted mb-1">Questions Done</p>
+          <p className="font-mono text-xl font-bold text-text-primary">{overall.totalAttempts}</p>
+        </div>
+      </div>
+      {insights.length > 0 && (
+        <div className="space-y-2">
+          {insights.map((it, i) => {
+            const v = VERDICT_COPY[it.verdict]
+            return (
+              <div key={i} className="flex items-start gap-2 p-2.5 rounded-lg bg-bg-secondary">
+                {it.verdict === 'strong' ? <TrendingUp size={13} className="text-cat-green mt-0.5 flex-shrink-0" /> : <TrendingDown size={13} className="text-cat-red mt-0.5 flex-shrink-0" />}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-xs font-medium text-text-primary">{it.topic}</span>
+                    <Badge variant={v.color}>{v.label}</Badge>
+                  </div>
+                  <p className="text-[10px] text-text-muted mt-0.5">
+                    {it.accuracy}% accuracy · {it.avgTimeSec !== null ? `${it.avgTimeSec}s/question` : 'speed not tracked yet'} · {it.attempts} attempts
+                  </p>
+                  <p className="text-[10px] text-text-secondary mt-0.5">{v.tip}</p>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </Card>
+  )
+}
 
 function SectionBreakdown({ sectionId }) {
   const sec = SECTIONS[sectionId]
   const topicData = sec.topics.map(t => {
     const stats = getTopicStats(sectionId, t.name)
     const acc = getAccuracy(stats)
-    return { ...t, stats, acc, label: getStrengthLabel(acc), color: getStrengthColor(acc) }
+    const avgTime = getAvgTime(stats)
+    return { ...t, stats, acc, avgTime, label: getStrengthLabel(acc), color: getStrengthColor(acc) }
   })
 
   const attempted = topicData.filter(t => t.stats.attempts > 0)
@@ -87,7 +144,7 @@ function SectionBreakdown({ sectionId }) {
                 <div className="flex justify-between mb-0.5">
                   <span className="text-xs text-text-secondary truncate">{t.name}</span>
                   <span className="text-xs font-mono ml-2" style={{ color: t.color }}>
-                    {t.acc !== null ? `${t.acc}%` : '—'}
+                    {t.acc !== null ? `${t.acc}%` : '—'}{t.avgTime !== null ? ` · ${t.avgTime}s/q` : ''}
                   </span>
                 </div>
                 {t.acc !== null && <ProgressBar value={t.acc} color={t.color} showPct={false} />}
@@ -167,6 +224,8 @@ export default function Analysis() {
   return (
     <div className="animate-fade-in max-w-4xl space-y-5">
       <SectionHeader title="My Analysis" subtitle="Performance breakdown by section and topic — focus on red areas to improve fastest" />
+
+      <ImprovementFocus />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">

@@ -1,6 +1,8 @@
 // Error log + bookmarks: every wrong answer is auto-saved, and any question can be
 // flagged for revision. Powers the Revision module (re-serve wrong/flagged questions).
 
+import { getAllTopics } from '../data/curriculum.js'
+
 const KEY = 'cat_review'
 
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}') } catch { return {} } }
@@ -92,4 +94,51 @@ export const getReviewStats = () => {
     due: items.filter(i => (i.wrong || i.flagged) && !i.mastered).length,
     mastered: items.filter(i => i.mastered).length,
   }
+}
+
+// ── Export to the dataset (dataset/sources/needs_practice/) ──────────────────
+// Turns your wrong/flagged questions into records matching dataset/schema.json so they can
+// be dropped into dataset/sources/needs_practice/ and picked up by `npm run dataset:build` —
+// giving you a real, versioned "questions I need to practice" folder, not just localStorage.
+const topicIdByName = () => {
+  const m = {}
+  for (const t of getAllTopics()) m[`${t.sectionId}::${t.name}`] = t.id
+  return m
+}
+const slug = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40)
+
+// filter: same as getReviewItems ('due' = not-yet-mastered wrong/flagged items, by default)
+export const exportReviewAsDataset = ({ filter = 'due', section = 'All' } = {}) => {
+  const nameToId = topicIdByName()
+  const items = getReviewItems({ filter, section })
+  return items.map((it, i) => ({
+    id: `needs_practice_${slug(it.section)}_${slug(it.topic)}_${i}`,
+    sectionId: it.section,
+    topicId: nameToId[`${it.section}::${it.topic}`] || `${String(it.section || 'x').toLowerCase()}_${slug(it.topic)}`,
+    topic: it.topic || 'Miscellaneous',
+    difficulty: 'Medium',
+    type: Array.isArray(it.options) && it.options.length ? 'MCQ' : 'TITA',
+    question: it.stem,
+    options: Array.isArray(it.options) ? it.options : [],
+    correct: it.answer || '',
+    concept: '',
+    solution: it.explanation || '',
+    source: 'needs_practice',
+  })).filter(r => r.question)
+}
+
+// Downloads a .jsonl file ready to drop into dataset/sources/needs_practice/.
+export const downloadReviewExport = ({ filter = 'due', section = 'All' } = {}) => {
+  const rows = exportReviewAsDataset({ filter, section })
+  if (!rows.length) return 0
+  const blob = new Blob([rows.map(r => JSON.stringify(r)).join('\n') + '\n'], { type: 'application/x-ndjson' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `needs_practice_${new Date().toISOString().slice(0, 10)}.jsonl`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+  return rows.length
 }

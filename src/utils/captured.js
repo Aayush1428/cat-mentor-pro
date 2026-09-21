@@ -9,7 +9,7 @@
 // Shape mirrors pyqBank so the existing PYQ solver UI can render captured items as-is:
 //   { id, sectionId, topicId, topic, difficulty, question, options[], correct, concept, solution, origin, ts }
 
-import { callAI } from './ai.js'
+import { callAI, chatAI, parseJSON } from './ai.js'
 import { getAllTopics, SECTIONS } from '../data/curriculum.js'
 import { MBA_TOPICS } from '../data/mbaPathshala.js'
 
@@ -235,4 +235,66 @@ export const generateSimilarQuestions = async ({ topicId, topicName, sectionId, 
   const items = list.map(s => toItem(s, meta, 'generated')).filter(it => it && it.options.length === 4)
   if (items.length) saveCaptured(items)
   return items
+}
+
+// ── Practice composer: paste a question (text and/or a photo) → get similar questions ──
+// Classifies the input to a section/topic (minting a new DILR/LR type if genuinely novel,
+// same as classifyAndCapture) and writes `count` brand-new practice questions of that
+// pattern. Supports an image (data URL) via the vision model when text alone isn't enough.
+const buildComposerPrompt = (text, hasImage, count) => `Valid section | topicId | topic catalog:
+${buildCatalog()}
+${hasImage ? '\nThe attached image contains a CAT practice question — read it carefully (transcribe any table/data shown) to understand what is being asked.' : ''}
+${text ? `\nSTUDENT-PROVIDED TEXT:\n"""${text.slice(0, 3000)}"""` : ''}
+
+Classify this question to the best-fitting section + topic, then write ${count} brand-new ORIGINAL practice questions of the SAME topic, type and difficulty pattern (never copy the input verbatim; never claim any question is from a real exam year).
+
+Rules:
+- Prefer an EXISTING topic: set topicId to the best-fitting id copied EXACTLY from the catalog.
+- Only if this is a genuinely DISTINCT type no catalog topic reasonably covers (most common for novel DILR/LR set types), set "topicId": "NEW" and give "newTopic": { "name": "<short 2-4 word type name>", "sectionId": "DILR|QA|VARC" }.
+- Every question needs exactly 4 options prefixed "A) ", "B) ", "C) ", "D) ", a single correct letter, a one-line concept, and a concise worked solution.
+- For VARC (RC) or DILR questions needing a passage/data set, embed the passage/data INSIDE the question text so it is self-contained.
+- Return ONLY valid JSON, no preamble, no markdown fences, of exactly this shape:
+{
+  "sectionId": "QA" | "VARC" | "DILR",
+  "topicId": "<an id copied from the catalog, or the literal NEW>",
+  "newTopic": { "name": "<only when topicId is NEW>", "sectionId": "DILR" },
+  "topic": "<the matching topic name>",
+  "difficulty": "Easy" | "Medium" | "Hard",
+  "similar": [
+    { "question": "...", "options": ["A) ...","B) ...","C) ...","D) ..."], "correct": "A", "concept": "...", "solution": "..." }
+  ]
+}
+"similar" must contain exactly ${count} objects. Omit "newTopic" unless topicId is "NEW".`
+
+export const classifyAndGenerateFromInput = async ({ text = '', imageDataUrl = null, count = 3 } = {}) => {
+  const clean = String(text || '').trim()
+  if (!clean && !imageDataUrl) throw new Error('Paste a question or attach an image first')
+  const prompt = buildComposerPrompt(clean, !!imageDataUrl, count)
+
+  let d
+  if (imageDataUrl) {
+    const raw = await chatAI(CLASSIFY_SYSTEM, [{ role: 'user', content: [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: imageDataUrl } }] }], 2800, { vision: true })
+    d = parseJSON(raw)
+  } else {
+    d = await callAI(CLASSIFY_SYSTEM, prompt, 2800)
+  }
+
+  const rawId = String(d?.topicId || '').trim()
+  let meta
+  if (rawId === 'NEW' && d.newTopic && SECTIONS[d.newTopic.sectionId]) {
+    const created = ensureDynTopic(d.newTopic)
+    if (!created) throw new Error('Could not classify this question into a topic')
+    meta = { sectionId: created.sectionId, topicId: created.id, topic: created.name, difficulty: d.difficulty, dynamic: true }
+  } else {
+    const m = topicMetaById(rawId)
+    if (!m) throw new Error('Could not classify this question into a known topic')
+    meta = { sectionId: m.sectionId, topicId: rawId, topic: m.topic || d.topic, difficulty: d.difficulty, dynamic: m.dynamic }
+  }
+
+  const items = (Array.isArray(d.similar) ? d.similar : []).slice(0, count)
+    .map(s => toItem(s, meta, 'generated'))
+    .filter(it => it && it.options.length === 4)
+  if (!items.length) throw new Error('The AI could not generate valid questions from this input')
+  const { added } = saveCaptured(items)
+  return { items, added, sectionId: meta.sectionId, topicId: meta.topicId, topic: meta.topic }
 }

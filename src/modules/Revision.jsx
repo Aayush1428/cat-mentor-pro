@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
-import { Card, Badge, SectionHeader } from '../components/ui/index.jsx'
-import { getReviewItems, getReviewStats, markMastered, removeItem } from '../utils/bookmarks.js'
+import { Card, Badge, SectionHeader, showToast } from '../components/ui/index.jsx'
+import { getReviewItems, getReviewStats, markMastered, removeItem, downloadReviewExport } from '../utils/bookmarks.js'
 import { SECTIONS } from '../data/curriculum.js'
-import { RotateCcw, CheckCircle, Trash2, Bookmark, Eye } from 'lucide-react'
+import { RotateCcw, CheckCircle, Trash2, Bookmark, Eye, Download } from 'lucide-react'
 
 const FILTERS = [
   { id: 'due', label: 'To Revise' },
@@ -83,6 +83,12 @@ export default function Revision() {
   const stats = getReviewStats()
   const items = getReviewItems({ filter, section })
 
+  const exportToDataset = () => {
+    const n = downloadReviewExport({ filter, section })
+    if (!n) { showToast('Nothing to export in this filter', 'error'); return }
+    showToast(`Downloaded ${n} question(s) — drop the file into dataset/sources/needs_practice/`, 'success')
+  }
+
   return (
     <div className="animate-fade-in max-w-3xl space-y-5">
       <SectionHeader title="Revision & Error Log" subtitle="Every question you got wrong is saved here automatically. Re-solve them until they stick — this is where percentiles are won." />
@@ -108,6 +114,9 @@ export default function Revision() {
             {s}
           </button>
         ))}
+        <button onClick={exportToDataset} className="ml-auto px-3 py-1.5 rounded-xl text-xs font-semibold border border-cat-green/40 text-cat-green hover:bg-cat-green/10 transition-all flex items-center gap-1.5">
+          <Download size={12} /> Export to dataset/needs_practice
+        </button>
       </div>
 
       {items.length === 0 ? (

@@ -1,6 +1,9 @@
 node_modules
 dist
 
+# macOS
+.DS_Store
+
 # MBA Pathshala raw source (multi-GB) — only compressed public/mba-pathshala images are committed
 MBA Pathshala Questions.zip
 MBA Pathshala Questions/

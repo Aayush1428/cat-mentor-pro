@@ -1,0 +1,203 @@
+{
+  "generatedAt": "2026-09-21T20:57:08.653Z",
+  "schema": "schema.json",
+  "total": 35,
+  "bySection": {
+    "DILR": 4,
+    "QA": 28,
+    "VARC": 3
+  },
+  "byDifficulty": {
+    "Easy": 24,
+    "Medium": 11
+  },
+  "byType": {
+    "MCQ": 35
+  },
+  "bySource": {
+    "practice": 2,
+    "seed": 4,
+    "pyqBank": 28,
+    "pyq": 1
+  },
+  "topics": [
+    {
+      "sectionId": "QA",
+      "topicId": "qa_percentages",
+      "topic": "Percentages",
+      "count": 4
+    },
+    {
+      "sectionId": "DILR",
+      "topicId": "di_tables",
+      "topic": "DI — Tables",
+      "count": 2
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_linear_eq",
+      "topic": "Linear & Quadratic Equations",
+      "count": 2
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_progressions",
+      "topic": "AP, GP & Special Series",
+      "count": 2
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_si_ci",
+      "topic": "Simple & Compound Interest",
+      "count": 2
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_profit",
+      "topic": "Profit, Loss & Discount",
+      "count": 2
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_tsd",
+      "topic": "Time, Speed & Distance",
+      "count": 2
+    },
+    {
+      "sectionId": "DILR",
+      "topicId": "di_pie",
+      "topic": "DI — Pie Charts",
+      "count": 1
+    },
+    {
+      "sectionId": "DILR",
+      "topicId": "lr_blood",
+      "topic": "LR — Blood Relations",
+      "count": 1
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_averages",
+      "topic": "Averages & Mixtures",
+      "count": 1
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_circles",
+      "topic": "Circles & Tangents",
+      "count": 1
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_hcf_lcm",
+      "topic": "HCF & LCM",
+      "count": 1
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_inequalities",
+      "topic": "Inequalities & Modulus",
+      "count": 1
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_logs",
+      "topic": "Logarithms & Surds",
+      "count": 1
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_mensuration",
+      "topic": "Mensuration (2D & 3D)",
+      "count": 1
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_numbers",
+      "topic": "Number System & Divisibility",
+      "count": 1
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_pc",
+      "topic": "Permutation & Combination",
+      "count": 1
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_probability",
+      "topic": "Probability",
+      "count": 1
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_ratio",
+      "topic": "Ratio & Proportion",
+      "count": 1
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_remainders",
+      "topic": "Remainders & Factors",
+      "count": 1
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_set_theory",
+      "topic": "Set Theory",
+      "count": 1
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_triangles",
+      "topic": "Triangles & Properties",
+      "count": 1
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_tw",
+      "topic": "Time & Work / Pipes & Cisterns",
+      "count": 1
+    },
+    {
+      "sectionId": "VARC",
+      "topicId": "grammar_tenses",
+      "topic": "Grammar — Tenses & Agreement",
+      "count": 1
+    },
+    {
+      "sectionId": "VARC",
+      "topicId": "vocab_synonyms",
+      "topic": "Vocabulary — Synonyms/Antonyms",
+      "count": 1
+    },
+    {
+      "sectionId": "VARC",
+      "topicId": "vocab_words",
+      "topic": "Word Usage & Fill-in-Blanks",
+      "count": 1
+    }
+  ],
+  "files": [
+    {
+      "file": "questions/qa.jsonl",
+      "section": "QA",
+      "count": 28
+    },
+    {
+      "file": "questions/varc.jsonl",
+      "section": "VARC",
+      "count": 3
+    },
+    {
+      "file": "questions/dilr.jsonl",
+      "section": "DILR",
+      "count": 4
+    },
+    {
+      "file": "questions/all.jsonl",
+      "section": "ALL",
+      "count": 35
+    }
+  ]
+}

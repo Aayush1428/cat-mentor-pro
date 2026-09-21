@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://cat-mentor-pro/dataset/schema.json",
+  "title": "CAT Question Record",
+  "description": "One CAT practice question, used as an ML/LLM dataset example for generating more similar questions. One JSON object per line in the .jsonl files.",
+  "type": "object",
+  "required": ["id", "sectionId", "topicId", "topic", "difficulty", "type", "question", "correct"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique, stable id for the question."
+    },
+    "sectionId": {
+      "type": "string",
+      "enum": ["QA", "VARC", "DILR"],
+      "description": "CAT section id."
+    },
+    "section": {
+      "type": "string",
+      "description": "Human-readable section label (e.g. 'Quantitative Aptitude')."
+    },
+    "topicId": {
+      "type": "string",
+      "description": "Curriculum topic id — must match an id in src/data/curriculum.js (e.g. 'qa_tsd')."
+    },
+    "topic": {
+      "type": "string",
+      "description": "Human-readable topic name (e.g. 'Time, Speed & Distance')."
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Topic tags copied from the curriculum (e.g. ['Arithmetic'])."
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": ["Easy", "Medium", "Hard"]
+    },
+    "type": {
+      "type": "string",
+      "enum": ["MCQ", "TITA"],
+      "description": "MCQ = 4 options with one correct letter. TITA = type-in-the-answer (no options)."
+    },
+    "question": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Full, self-contained question text. For RC/DILR, embed the passage or data inside this field."
+    },
+    "options": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Exactly 4 options like 'A) ...' for MCQ; empty [] for TITA."
+    },
+    "correct": {
+      "type": "string",
+      "description": "'A'|'B'|'C'|'D' for MCQ; the exact answer string for TITA."
+    },
+    "concept": {
+      "type": "string",
+      "description": "The single concept / technique the question tests."
+    },
+    "solution": {
+      "type": "string",
+      "description": "Worked, step-by-step solution."
+    },
+    "source": {
+      "type": "string",
+      "description": "Provenance: pyqBank | official | captured | seed | manual."
+    },
+    "reference": {
+      "type": "string",
+      "description": "Citation for what this question is modeled on, e.g. 'CAT 2025 Slot 2' — empty if purely AI-generated."
+    }
+  }
+}

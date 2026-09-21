@@ -66,6 +66,43 @@ export const getSectionStats = (section) => {
 
 export const getAccuracy = (stats) => stats.attempts === 0 ? null : Math.round((stats.correct / stats.attempts) * 100)
 
+// Average seconds spent per question on a topic (null if no timed attempts recorded yet).
+export const getAvgTime = (stats) => stats.attempts === 0 || !stats.totalTime ? null : Math.round(stats.totalTime / stats.attempts)
+
+// Speed + accuracy across every attempted topic, for the "how am I doing overall" summary.
+export const getOverallStats = () => {
+  const rows = Object.values(load())
+  const totalAttempts = rows.reduce((s, r) => s + r.attempts, 0)
+  const totalCorrect = rows.reduce((s, r) => s + r.correct, 0)
+  const totalTime = rows.reduce((s, r) => s + (r.totalTime || 0), 0)
+  const timedAttempts = rows.reduce((s, r) => s + (r.totalTime ? r.attempts : 0), 0)
+  return {
+    totalAttempts,
+    totalCorrect,
+    accuracy: totalAttempts ? Math.round((totalCorrect / totalAttempts) * 100) : null,
+    avgTimeSec: timedAttempts ? Math.round(totalTime / timedAttempts) : null,
+  }
+}
+
+// Ranks every attempted topic by how much it needs work: low accuracy first, then slow topics.
+// verdict: 'weak-slow' | 'weak' | 'slow' | 'strong' — used to phrase a concrete recommendation.
+export const getImprovementInsights = (limit = 6) => {
+  const rows = Object.values(load()).filter(r => r.attempts > 0)
+  const { avgTimeSec: overallAvgTime } = getOverallStats()
+  const withMetrics = rows.map(r => {
+    const accuracy = getAccuracy(r)
+    const avgTimeSec = getAvgTime(r)
+    const slow = avgTimeSec !== null && overallAvgTime !== null && avgTimeSec > overallAvgTime * 1.15
+    const weak = accuracy !== null && accuracy < 60
+    const verdict = weak && slow ? 'weak-slow' : weak ? 'weak' : slow ? 'slow' : 'strong'
+    return { section: r.section, topic: r.topic, accuracy, avgTimeSec, attempts: r.attempts, verdict }
+  })
+  const rank = { 'weak-slow': 0, weak: 1, slow: 2, strong: 3 }
+  return withMetrics
+    .sort((a, b) => rank[a.verdict] - rank[b.verdict] || (a.accuracy ?? 100) - (b.accuracy ?? 100))
+    .slice(0, limit)
+}
+
 export const getStrengthLabel = (accuracy) => {
   if (accuracy === null) return 'Not Attempted'
   if (accuracy >= 80) return 'Strong'

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { chatAI, visionAvailable } from '../utils/ai.js'
 import { classifyAndCapture, getCapturedCount } from '../utils/captured.js'
+import { downscaleImage } from '../utils/image.js'
 import { showToast } from '../components/ui/index.jsx'
 import Markdown from '../components/Markdown.jsx'
 import { Send, Copy, Check, Paperclip, X, FileText, Sparkles, BookOpen } from 'lucide-react'
@@ -54,32 +55,6 @@ const ACCEPT = 'image/*,.txt,.md,.csv,.tsv,.json,.log,.py,.js,.ts,.jsx,.tsx,.jav
 
 const uid = () => Math.random().toString(36).slice(2, 9)
 const readAsText = (f) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result || '')); r.onerror = rej; r.readAsText(f) })
-
-// Downscale + JPEG-compress an image so it stays legible but fits NVIDIA's ~180KB inline-image limit.
-const TARGET_IMAGE_CHARS = 180000
-const downscaleImage = (file) => new Promise((resolve, reject) => {
-  const url = URL.createObjectURL(file)
-  const img = new Image()
-  img.onload = () => {
-    URL.revokeObjectURL(url)
-    const maxDim = 1280
-    let { width, height } = img
-    if (Math.max(width, height) > maxDim) {
-      const scale = maxDim / Math.max(width, height)
-      width = Math.round(width * scale); height = Math.round(height * scale)
-    }
-    const canvas = document.createElement('canvas')
-    canvas.width = width; canvas.height = height
-    const ctx = canvas.getContext('2d')
-    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, width, height)
-    ctx.drawImage(img, 0, 0, width, height)
-    let q = 0.82, out = canvas.toDataURL('image/jpeg', q)
-    while (out.length > TARGET_IMAGE_CHARS && q > 0.35) { q -= 0.12; out = canvas.toDataURL('image/jpeg', q) }
-    resolve(out)
-  }
-  img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('image decode failed')) }
-  img.src = url
-})
 
 function Message({ msg }) {
   const [copied, setCopied] = useState(false)

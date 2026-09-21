@@ -1,0 +1,24 @@
+{
+  "generatedAt": "2026-09-21T20:57:08.656Z",
+  "count": 1,
+  "byTopic": {
+    "QA:qa_percentages": [
+      {
+        "question": "A number, when increased by 20%, becomes 96. What is the number?",
+        "options": [
+          "A) 76",
+          "B) 80",
+          "C) 115.2",
+          "D) 120"
+        ],
+        "correct": "B",
+        "concept": "Reverse percentage",
+        "difficulty": "Easy",
+        "reference": "CAT previous year",
+        "topic": "Percentages",
+        "topicId": "qa_percentages",
+        "sectionId": "QA"
+      }
+    ]
+  }
+}
