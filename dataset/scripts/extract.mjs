@@ -244,6 +244,7 @@ const docxPromptFor = (p, text, hasImage) =>
   `"correct" ("A"|"B"|"C"|"D", or the exact answer for non-MCQ; if the document gives an answer key use it, else solve it), ` +
   `"difficulty" ("Easy"|"Medium"|"Hard"), "concept" (idea tested), "solution" (concise worked solution), ` +
   `"topicLabel" (topic name if the document states one for the question, else ""), ` +
+  `"questionNumber" (the question's printed number as an integer, e.g. 2 for "Question 2" — 0 if not shown), ` +
   `"reference" (any set/test id printed, e.g. "RC #130" or "LR SET #176", else ""). ` +
   `Ignore headers/instructions that are not themselves questions. Preserve math as plain text. Return ONLY a JSON array of these objects.\n\nDOCUMENT TEXT:\n"""${text}"""`
 
@@ -255,7 +256,8 @@ const promptFor = (p) =>
   `"correct" ("A"|"B"|"C"|"D" for MCQ, or the exact answer for non-MCQ; if not shown, solve it yourself), ` +
   `"difficulty" ("Easy"|"Medium"|"Hard"), "concept" (the idea tested), "solution" (concise worked solution), ` +
   `"topicLabel" (the topic name EXACTLY as printed on the page/header for this question, e.g. "Percentages" or "Time, Speed & Distance" — empty string if no topic label is shown), ` +
-  `"reference" (any paper/slot/year citation printed near the question, e.g. "CAT 2025 Slot 2" or a filename-derived label — empty string if nothing is shown). ` +
+  `"questionNumber" (the question's printed number on the page as an integer, e.g. 2 for "Q2"/"Question 2" — 0 if not shown), ` +
+  `"reference" (any paper/slot/year citation printed near the question, e.g. "CAT 2025 Slot 2" — empty string if nothing is shown). ` +
   `Preserve math as plain text. Return ONLY a JSON array of these objects.`
 
 const parseJSON = (text) => {
@@ -311,6 +313,17 @@ const callVision = (dataUrl, text) => callModel([{ type: 'text', text }, { type:
 // these are excluded from the per-question label override (falls back to the folder topic).
 const AMBIGUOUS_LABELS = new Set(['geometry', 'algebra', 'arithmetic', 'numbers', 'number-system', 'modern-math', 'modern-maths'])
 
+// Turn a source filename into a human citation, e.g. "CAT_2025_Slot_1_Quant_with_Topics" →
+// "CAT 2025 Slot 1" (drops filler words + long numeric/hex id tokens). Used to build a
+// per-question reference like "CAT 2025 Slot 1 Q2" when the file itself doesn't print one.
+const FILLER_TOKENS = /^(quant|quantitative|aptitude|maths?|with|topics?|section|paper|papers|questions?|varc|dilr|lrdi|di|lr|va)$/i
+const cleanFileRef = (base) => String(base || '')
+  .split(/[\s_\-]+/)
+  .filter((t) => t && !FILLER_TOKENS.test(t) && !/^[0-9a-f]{8,}$/i.test(t) && !/^\d{6,}$/.test(t))
+  .join(' ')
+  .replace(/\s+/g, ' ')
+  .trim()
+
 const toRecord = (raw, p, i, pageNum) => {
   const options = Array.isArray(raw.options) ? raw.options.filter(Boolean).map(String).slice(0, 4) : []
   const correct = String(raw.correct ?? '').trim()
@@ -325,6 +338,12 @@ const toRecord = (raw, p, i, pageNum) => {
   const confident = labelMatch && topicById[labelMatch.topicId]
   const topicId = (confident && labelMatch.topicId) || p.topicId
   const topic = (confident && labelMatch.topic) || p.topic
+  // Reference: use whatever the doc prints (e.g. "RC #130", "LR SET #176"); otherwise build one
+  // from the file name + question number, e.g. "CAT 2025 Slot 1 Q2".
+  const printedRef = String(raw.reference || '').trim()
+  const qNum = Number(raw.questionNumber) > 0 ? Number(raw.questionNumber) : i + 1
+  const fileRef = cleanFileRef(p.base)
+  const reference = printedRef || (fileRef ? `${fileRef} Q${qNum}` : '')
   return {
     id: `${p.source}_${slugify(topicId || p.sectionId || 'x')}_${slugify(p.base)}${suffix}`,
     sectionId: p.sectionId,
@@ -338,7 +357,7 @@ const toRecord = (raw, p, i, pageNum) => {
     concept: String(raw.concept || '').trim(),
     solution: String(raw.solution || '').trim(),
     source: p.source,
-    reference: String(raw.reference || '').trim(),
+    reference,
   }
 }
 
