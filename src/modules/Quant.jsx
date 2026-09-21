@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Card, Badge, SectionHeader, CardSkeleton, showToast, ScoreRing, BookmarkButton } from '../components/ui/index.jsx'
 import { callAI } from '../utils/ai.js'
-import { pyqAnchorsForTopic, formatAnchors } from '../utils/pyq.js'
+import { pyqAnchorsForTopic, formatAnchors, resolveModeledRef } from '../utils/pyq.js'
 import { recordAttempt } from '../utils/performance.js'
 import { logResult } from '../utils/bookmarks.js'
 import LearnPanel from '../components/LearnPanel.jsx'
@@ -29,7 +29,7 @@ const PYQ_SYSTEM = `You are a CAT Quantitative Aptitude expert who writes NEW or
 const buildPYQPrompt = (topic, anchors, count) => `Topic: "${topic}". Here are ${anchors.length} real CAT question(s) on this topic (from previous-year papers and/or the student's practice sets) as style/difficulty anchors:
 ${formatAnchors(anchors)}
 
-Write ${count} NEW original questions, each modeled on one of the anchors above (rotate through them). For each, set "reference" to "Modeled on <that anchor's ref>".
+Write ${count} NEW original questions, each modeled on one of the anchors above (rotate through them). For each, set "reference" to the anchor number you modeled it on, written as "[N]" (e.g. "[1]").
 
 Return ONLY a JSON array:
 [{
@@ -38,7 +38,7 @@ Return ONLY a JSON array:
   "correct": "A|B|C|D",
   "solution": "step-by-step solution with calculations",
   "concept": "the specific formula or concept used",
-  "reference": "Modeled on <anchor ref>",
+  "reference": "[1]",
   "difficulty": "Easy|Medium|Hard"
 }]`
 
@@ -129,7 +129,8 @@ function TopicPractice({ topic, hasApiKey, onNavigate }) {
         return
       }
       const d = await callAI(PYQ_SYSTEM, buildPYQPrompt(topic.name, anchors, 5), 3000)
-      setQuestions(Array.isArray(d) ? d : [])
+      const list = (Array.isArray(d) ? d : []).map((q) => ({ ...q, reference: resolveModeledRef(q.reference, anchors) }))
+      setQuestions(list)
       setStartedAt(Date.now())
     } catch (e) { showToast('Error: ' + e.message, 'error') }
     finally { setPyqLoading(false) }

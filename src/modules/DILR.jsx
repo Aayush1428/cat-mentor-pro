@@ -104,14 +104,16 @@ const buildDILRDailyPlan = () => {
 
 // Base type prompt + (when the corpus has them) real anchors of that type — from previous-year
 // papers AND the user's own practice material — so the daily set is modeled on genuine CAT sets.
-// Falls back to ungrounded generation when none exist.
+// Returns { prompt, reference }; the reference is set by us (not the model) so it's always a real
+// name. Falls back to ungrounded generation when none exist.
 const buildDailyDILRPrompt = async (slot) => {
   const base = TOPIC_PROMPTS[slot.name] ? TOPIC_PROMPTS[slot.name](slot.difficulty) : GENERIC_PROMPT(slot.name, slot.difficulty)
   const anchors = await pyqAnchorsTopicThenSection('DILR', slot.topicId, 3)
-  if (!anchors.length) return base
-  const ref = anchorRefs(anchors)[0] || 'CAT practice'
-  return base +
-    `\n\nGROUND THIS SET on these real CAT "${slot.name}" (or related DILR) question(s) — from previous-year papers and/or the student's own practice material. Match their structure, data style, twist and difficulty, but produce an ENTIRELY ORIGINAL set (never copy their wording or exact numbers). Also add a top-level "reference" field set to "Modeled on ${ref}":\n${formatAnchors(anchors)}`
+  if (!anchors.length) return { prompt: base, reference: '' }
+  const refs = anchorRefs(anchors).slice(0, 2)
+  const prompt = base +
+    `\n\nGROUND THIS SET on these real CAT "${slot.name}" (or related DILR) question(s) — from previous-year papers and/or the student's own practice material. Match their structure, data style, twist and difficulty, but produce an ENTIRELY ORIGINAL set (never copy their wording or exact numbers):\n${formatAnchors(anchors)}`
+  return { prompt, reference: `Modeled on ${refs.join(' + ') || 'CAT practice'}` }
 }
 
 const dilr5Key = () => `cat_dilr5_${isoDay()}`
@@ -304,8 +306,9 @@ function Daily5DILR({ hasApiKey, onNavigate }) {
     if (!hasApiKey) { onNavigate('settings'); return }
     setLoading(true)
     try {
-      const prompt = await buildDailyDILRPrompt(plan[i])
+      const { prompt, reference } = await buildDailyDILRPrompt(plan[i])
       const d = await getCachedContent(`dilr5_${isoDay()}_${i}`, SYSTEM, prompt, 2400)
+      if (reference && d && typeof d === 'object') d.reference = reference
       setSet(d)
     } catch (e) { showToast('Error: ' + e.message, 'error') }
     finally { setLoading(false) }

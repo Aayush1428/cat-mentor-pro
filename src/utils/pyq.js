@@ -78,3 +78,21 @@ export const formatAnchors = (anchors) =>
 // Distinct reference strings present in a set of anchors (e.g. ['CAT 2025 Slot 2']).
 export const anchorRefs = (anchors) => [...new Set((anchors || []).map((a) => a.reference).filter(Boolean))]
 
+// The generator is told to cite "Modeled on <anchor>" but sometimes echoes the list index ("[1]")
+// instead of the anchor's real name. Map a bare index back to the real reference; keep an already-
+// specific citation as-is; otherwise fall back to the primary anchor's reference.
+export const resolveModeledRef = (modelRef, anchors) => {
+  const list = anchors || []
+  const primary = list[0]?.reference
+  const s = String(modelRef || '').trim()
+  // Only treat it as an index if the whole thing is essentially just a number / "[n]" (so a real
+  // citation like "CAT 2025 Slot 1 Q2" — which ends in a digit — is NOT mistaken for an index).
+  const m = s.match(/^(?:modeled on\s*)?\[?(\d{1,2})\]?$/i)
+  if (m) {
+    const a = list[Number(m[1]) - 1]
+    return `Modeled on ${(a && a.reference) || primary || 'a real CAT question'}`
+  }
+  if (s) return /^modeled on/i.test(s) ? s : `Modeled on ${s}`
+  return primary ? `Modeled on ${primary}` : ''
+}
+
