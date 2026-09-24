@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://cat-mentor-pro/dataset/prompts/schemas/varc.schema.json",
+  "title": "VARC generation output",
+  "description": "Shape an LLM must return for a VARC item. For RC it is ONE passage + its questions (never an isolated RC question). Non-RC types (para-jumble/summary/odd-one-out) use the same questions[] with type set accordingly and no passage.",
+  "type": "object",
+  "properties": {
+    "passageId": { "type": "string", "description": "Optional stable id." },
+    "passage": { "type": "string", "description": "The full original RC passage (500-750 words). Omit for non-RC types." },
+    "genre": { "type": "string", "description": "e.g. 'Philosophy', 'Economics', 'Science'." },
+    "difficulty": { "type": "string", "enum": ["Easy", "Medium", "Hard"] },
+    "wordCount": { "type": "integer", "description": "Approximate passage length." },
+    "questions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "required": ["options", "correct"],
+        "properties": {
+          "q": { "type": "string", "description": "Question text (either 'q' or 'question')." },
+          "question": { "type": "string" },
+          "type": {
+            "type": "string",
+            "description": "RC question type.",
+            "enum": ["Main Idea", "Inference", "Author's Purpose", "Tone", "Detail", "Vocabulary", "Strengthen/Weaken", "Application", "Para Jumble", "Para Summary", "Odd One Out"]
+          },
+          "options": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": { "type": "string", "pattern": "^[A-D]\\)" }
+          },
+          "correct": { "type": "string", "enum": ["A", "B", "C", "D"] },
+          "explanation": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "reference": { "type": "string", "description": "'Modeled on <anchor>' or empty." }
+  },
+  "required": ["questions"],
+  "additionalProperties": true
+}

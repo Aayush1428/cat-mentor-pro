@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://cat-mentor-pro/dataset/prompts/schemas/qa.schema.json",
+  "title": "QA generation output",
+  "description": "Shape an LLM must return for a Quantitative Aptitude question. The model returns a JSON ARRAY of these. Normalised into ../../schema.json for storage.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["question", "options", "correct", "solution", "concept"],
+    "properties": {
+      "question": { "type": "string", "minLength": 1, "description": "Full, self-contained question text with all data." },
+      "options": {
+        "type": "array",
+        "minItems": 4,
+        "maxItems": 4,
+        "items": { "type": "string", "pattern": "^[A-D]\\)" },
+        "description": "Exactly 4 options, each prefixed 'A) '..'D) '."
+      },
+      "correct": { "type": "string", "enum": ["A", "B", "C", "D"] },
+      "solution": { "type": "string", "description": "Step-by-step worked solution with correct arithmetic." },
+      "concept": { "type": "string", "description": "The specific formula/concept tested." },
+      "shortcut": { "type": "string", "description": "A faster CAT approach, or empty string if none." },
+      "subtopic": { "type": "string", "description": "Optional finer classification, e.g. 'Successive Percentage Change'." },
+      "difficulty": { "type": "string", "enum": ["Easy", "Medium", "Hard"] },
+      "reference": { "type": "string", "description": "Citation for the anchor it was modeled on, e.g. 'Modeled on CAT 2025 Slot 2'; empty for pure AI-generation." }
+    },
+    "additionalProperties": true
+  }
+}

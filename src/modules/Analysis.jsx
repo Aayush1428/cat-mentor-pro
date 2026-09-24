@@ -3,6 +3,7 @@ import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, BarC
 import { Card, SectionHeader, Badge, ProgressBar } from '../components/ui/index.jsx'
 import { SECTIONS } from '../data/curriculum.js'
 import { getTopicStats, getAccuracy, getAvgTime, getStrengthLabel, getStrengthColor, getDailyHistory, getMockHistory, getOverallStats, getImprovementInsights } from '../utils/performance.js'
+import { getMistakeBreakdown, errorTypeLabel } from '../utils/bookmarks.js'
 import { Zap, Target, TrendingDown, TrendingUp } from 'lucide-react'
 
 const VERDICT_COPY = {
@@ -15,6 +16,8 @@ const VERDICT_COPY = {
 function ImprovementFocus() {
   const overall = getOverallStats()
   const insights = getImprovementInsights(6)
+  const mistakes = getMistakeBreakdown()
+  const mistakeRows = Object.entries(mistakes).filter(([k, v]) => k !== 'untagged' && v > 0).sort((a, b) => b[1] - a[1])
   if (overall.totalAttempts === 0) return null
   return (
     <Card>
@@ -54,6 +57,18 @@ function ImprovementFocus() {
               </div>
             )
           })}
+        </div>
+      )}
+      {mistakeRows.length > 0 && (
+        <div className="mt-4 pt-3 border-t border-border">
+          <p className="text-[10px] text-text-muted mb-2">Why you miss questions (tagged in Revision)</p>
+          <div className="flex flex-wrap gap-1.5">
+            {mistakeRows.map(([id, n]) => (
+              <span key={id} className="px-2 py-1 rounded-lg text-[10px] bg-cat-orange/10 text-cat-orange border border-cat-orange/30">
+                {errorTypeLabel(id)} · {n}
+              </span>
+            ))}
+          </div>
         </div>
       )}
     </Card>

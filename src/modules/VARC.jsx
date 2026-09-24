@@ -3,10 +3,12 @@ import { Card, Badge, SectionHeader, CardSkeleton, showToast, ScoreRing, TimerDi
 import { callAI, getCachedContent } from '../utils/ai.js'
 import { recordAttempt } from '../utils/performance.js'
 import { logResult } from '../utils/bookmarks.js'
+import { filterNovel } from '../utils/similarity.js'
+import { catSystem } from '../data/promptContract.js'
 import { SECTIONS } from '../data/curriculum.js'
 import { BookOpen, ChevronRight, RotateCcw, Clock, CheckCircle, XCircle } from 'lucide-react'
 
-const SYSTEM = `You are a CAT exam VARC expert with 10+ years of experience. Generate authentic CAT-style questions. Return ONLY valid JSON, no markdown, no preamble.`
+const SYSTEM = catSystem('VARC')
 
 // Map an RC question's type to the exact curriculum topic so analytics are accurate.
 const RC_TYPE_MAP = {
@@ -359,7 +361,7 @@ function Grammar({ hasApiKey, onNavigate }) {
   const generate = async () => {
     if (!hasApiKey) { onNavigate('settings'); return }
     setLoading(true); setQuestions([]); setAnswers({}); setSubmitted(false)
-    try { const d = await callAI(SYSTEM, buildGrammarPrompt(), 2000); setQuestions(Array.isArray(d)?d:[]) }
+    try { const d = await callAI(SYSTEM, buildGrammarPrompt(), 2000); setQuestions(filterNovel(Array.isArray(d)?d:[], { topicId: 'varc_grammar' })) }
     catch (e) { showToast('Error: ' + e.message, 'error') }
     finally { setLoading(false) }
   }

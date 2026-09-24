@@ -5,6 +5,25 @@ import { getAllTopics } from '../data/curriculum.js'
 
 const KEY = 'cat_review'
 
+// Mistake taxonomy — WHY an answer was wrong. Tagging this lets the engine tell
+// "I don't know this topic" apart from "I know it but waste time / misread", which need
+// completely different practice. Optional: set on logResult or later via setErrorType.
+export const ERROR_TYPES = [
+  { id: 'conceptual', label: 'Conceptual gap', hint: "Didn't know the concept/approach" },
+  { id: 'calculation', label: 'Calculation slip', hint: 'Right method, arithmetic error' },
+  { id: 'misread', label: 'Misread question', hint: 'Missed a word/condition' },
+  { id: 'wrong_assumption', label: 'Wrong assumption', hint: 'Assumed something not given' },
+  { id: 'forgot_formula', label: 'Forgot formula', hint: 'Knew it but blanked' },
+  { id: 'time_pressure', label: 'Time pressure', hint: 'Rushed / ran out of time' },
+  { id: 'poor_elimination', label: 'Poor elimination', hint: 'Fell for a trap option' },
+  { id: 'no_approach', label: 'No approach', hint: "Couldn't get started" },
+  { id: 'set_selection', label: 'Set selection (LRDI)', hint: 'Picked the wrong set to attempt' },
+  { id: 'inference', label: 'Inference error (VARC)', hint: 'Over/under-inferred from the text' },
+  { id: 'overthinking', label: 'Overthinking', hint: 'Second-guessed a correct read' },
+]
+const ERROR_IDS = new Set(ERROR_TYPES.map(e => e.id))
+export const errorTypeLabel = (id) => ERROR_TYPES.find(e => e.id === id)?.label || ''
+
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}') } catch { return {} } }
 const save = (d) => localStorage.setItem(KEY, JSON.stringify(d))
 
@@ -27,6 +46,7 @@ const upsert = (d, base) => {
       stem: base.stem, options: base.options || null, answer: base.answer ?? '',
       explanation: base.explanation || '',
       flagged: false, wrong: false, attempts: 0, correctStreak: 0, mastered: false,
+      errorType: null,
       createdAt: now, updatedAt: now,
     }
   }
@@ -40,7 +60,7 @@ const upsert = (d, base) => {
 }
 
 // Called automatically on every graded submission.
-export const logResult = ({ section, topic, source, stem, options, answer, explanation, isCorrect }) => {
+export const logResult = ({ section, topic, source, stem, options, answer, explanation, isCorrect, errorType }) => {
   if (!stem) return
   const d = load()
   const it = upsert(d, { section, topic, source, stem, options, answer, explanation })
@@ -52,8 +72,19 @@ export const logResult = ({ section, topic, source, stem, options, answer, expla
     it.wrong = true
     it.correctStreak = 0
     it.mastered = false
+    if (errorType && ERROR_IDS.has(errorType)) it.errorType = errorType
   }
   save(d)
+}
+
+// Tag (or retag) why a logged question was missed. Returns the new value or null.
+export const setErrorType = (id, errorType) => {
+  const d = load()
+  if (!d[id]) return null
+  d[id].errorType = ERROR_IDS.has(errorType) ? errorType : null
+  d[id].updatedAt = new Date().toISOString()
+  save(d)
+  return d[id].errorType
 }
 
 export const toggleFlag = ({ section, topic, source, stem, options, answer, explanation }) => {
@@ -94,6 +125,19 @@ export const getReviewStats = () => {
     due: items.filter(i => (i.wrong || i.flagged) && !i.mastered).length,
     mastered: items.filter(i => i.mastered).length,
   }
+}
+
+// Count of missed questions by mistake type (for the analysis breakdown). Only wrong items
+// that have been tagged are counted; 'untagged' collects wrong items with no type yet.
+export const getMistakeBreakdown = ({ section = 'All' } = {}) => {
+  let items = Object.values(load()).filter(i => i.wrong)
+  if (section !== 'All') items = items.filter(i => i.section === section)
+  const out = { untagged: 0 }
+  for (const it of items) {
+    if (it.errorType && ERROR_IDS.has(it.errorType)) out[it.errorType] = (out[it.errorType] || 0) + 1
+    else out.untagged++
+  }
+  return out
 }
 
 // ── Export to the dataset (dataset/sources/needs_practice/) ──────────────────

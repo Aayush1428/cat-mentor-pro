@@ -1,5 +1,10 @@
 # Prompt: generate similar CAT questions from the dataset
 
+> For the full, section-aware contract (source priority, difficulty scale, validation,
+> answer policy, anti-repeat) see [`CAT_SYSTEM_PROMPT.md`](CAT_SYSTEM_PROMPT.md),
+> [`daily_generation_prompt.md`](daily_generation_prompt.md) and the per-section
+> [`schemas/`](schemas). This file is the minimal few-shot recipe for one topic.
+
 Use this with any LLM (Groq / DeepSeek / NVIDIA / OpenAI …) to turn the dataset
 into **new, original** CAT-style questions. The idea is few-shot prompting:
 sample a few rows from `dataset/questions/*.jsonl` for the same `topicId`, drop

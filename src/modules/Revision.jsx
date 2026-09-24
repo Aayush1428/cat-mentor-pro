@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Card, Badge, SectionHeader, showToast } from '../components/ui/index.jsx'
-import { getReviewItems, getReviewStats, markMastered, removeItem, downloadReviewExport } from '../utils/bookmarks.js'
+import { getReviewItems, getReviewStats, markMastered, removeItem, downloadReviewExport, ERROR_TYPES, setErrorType, errorTypeLabel } from '../utils/bookmarks.js'
 import { SECTIONS } from '../data/curriculum.js'
 import { RotateCcw, CheckCircle, Trash2, Bookmark, Eye, Download } from 'lucide-react'
 
@@ -26,6 +26,7 @@ function RevisionCard({ item, onChange }) {
         {item.flagged && <Bookmark size={12} className="text-cat-orange fill-cat-orange" />}
         {item.wrong && <Badge variant="red">Got wrong</Badge>}
         {item.mastered && <Badge variant="green">Mastered</Badge>}
+        {item.errorType && <Badge variant="orange">{errorTypeLabel(item.errorType)}</Badge>}
       </div>
 
       <p className="text-sm font-medium text-text-primary mb-3 leading-relaxed whitespace-pre-line">{item.stem}</p>
@@ -57,6 +58,20 @@ function RevisionCard({ item, onChange }) {
         <div className="bg-bg-secondary rounded-lg p-3 text-xs text-text-secondary leading-relaxed">
           {item.answer && <p className="font-semibold text-cat-green mb-1">Answer: {item.answer}</p>}
           {item.explanation && <p className="whitespace-pre-line">{item.explanation}</p>}
+          {item.wrong && (
+            <div className="mt-3 pt-3 border-t border-border">
+              <p className="text-[11px] text-text-muted mb-1.5">Why did you miss it? (tap to tag — sharpens your practice plan)</p>
+              <div className="flex flex-wrap gap-1.5">
+                {ERROR_TYPES.map(et => (
+                  <button key={et.id} title={et.hint}
+                    onClick={() => { setErrorType(item.id, item.errorType === et.id ? null : et.id); onChange() }}
+                    className={`px-2 py-1 rounded-lg text-[11px] border transition-all ${item.errorType === et.id ? 'border-cat-orange bg-cat-orange/10 text-cat-orange' : 'border-border text-text-muted hover:border-border-light'}`}>
+                    {et.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="flex gap-2 mt-3">
             <button onClick={() => { markMastered(item.id); onChange() }} className="px-3 py-1.5 rounded-lg bg-cat-green/10 border border-cat-green/30 text-cat-green text-xs font-semibold hover:bg-cat-green/20 transition-all flex items-center gap-1.5">
               <CheckCircle size={12} /> Mark mastered

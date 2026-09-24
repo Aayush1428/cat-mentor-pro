@@ -12,6 +12,8 @@
 import { callAI, chatAI, parseJSON } from './ai.js'
 import { getAllTopics, SECTIONS } from '../data/curriculum.js'
 import { MBA_TOPICS } from '../data/mbaPathshala.js'
+import { catSystem } from '../data/promptContract.js'
+import { filterNovel } from './similarity.js'
 
 const KEY = 'cat_captured'
 const DYN_KEY = 'cat_dyn_topics' // AI-Tutor-created topics (esp. brand-new LRDI question types)
@@ -218,7 +220,7 @@ export const classifyAndCapture = async ({ userText, answerText }) => {
 // On demand, write NEW original CAT-style questions of a topic, anchored on the
 // questions the tutor already captured for it (and, for QA, the MBA Pathshala
 // sub-type profile). Saves them (origin 'generated') and returns them.
-const SIMILAR_SYSTEM = `You are a CAT question writer. Given a topic and example questions of that topic, you write NEW original CAT-level multiple-choice questions of the SAME type, difficulty and pattern. Never copy an example verbatim; never attribute a question to a real exam year. Return ONLY a valid JSON array, no preamble or markdown fences.`
+const SIMILAR_SYSTEM = (sectionId) => catSystem(sectionId, `You are given a topic and example questions of that topic. Write NEW original CAT-level questions of the SAME type, difficulty and pattern as the examples.`)
 
 const buildSimilarPrompt = (topicName, sectionLabel, examples, count, profile) =>
   `Topic: ${topicName} (${sectionLabel}).
@@ -229,10 +231,10 @@ Write ${count} NEW original questions of the SAME type. For any question needing
 export const generateSimilarQuestions = async ({ topicId, topicName, sectionId, sectionLabel, count = 4, profile }) => {
   const examples = getCapturedByTopic(topicId).filter(q => q.origin !== 'generated').slice(0, 5)
   const prof = profile != null ? profile : profileForTopicName(topicName)
-  const arr = await callAI(SIMILAR_SYSTEM, buildSimilarPrompt(topicName, sectionLabel || sectionId, examples, count, prof), 2600)
+  const arr = await callAI(SIMILAR_SYSTEM(sectionId), buildSimilarPrompt(topicName, sectionLabel || sectionId, examples, count, prof), 2600)
   const list = Array.isArray(arr) ? arr : []
   const meta = { sectionId, topicId, topic: topicName, difficulty: 'Medium', dynamic: !CURRICULUM_IDS.has(topicId) }
-  const items = list.map(s => toItem(s, meta, 'generated')).filter(it => it && it.options.length === 4)
+  const items = filterNovel(list.map(s => toItem(s, meta, 'generated')).filter(it => it && it.options.length === 4), { topicId })
   if (items.length) saveCaptured(items)
   return items
 }
@@ -291,9 +293,9 @@ export const classifyAndGenerateFromInput = async ({ text = '', imageDataUrl = n
     meta = { sectionId: m.sectionId, topicId: rawId, topic: m.topic || d.topic, difficulty: d.difficulty, dynamic: m.dynamic }
   }
 
-  const items = (Array.isArray(d.similar) ? d.similar : []).slice(0, count)
+  const items = filterNovel((Array.isArray(d.similar) ? d.similar : []).slice(0, count)
     .map(s => toItem(s, meta, 'generated'))
-    .filter(it => it && it.options.length === 4)
+    .filter(it => it && it.options.length === 4), { topicId: meta.topicId })
   if (!items.length) throw new Error('The AI could not generate valid questions from this input')
   const { added } = saveCaptured(items)
   return { items, added, sectionId: meta.sectionId, topicId: meta.topicId, topic: meta.topic }

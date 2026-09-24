@@ -1,15 +1,20 @@
 import React, { useState } from 'react'
 import { Card, Badge, SectionHeader, CardSkeleton, showToast, ScoreRing, BookmarkButton } from '../components/ui/index.jsx'
-import { callAI } from '../utils/ai.js'
-import { pyqAnchorsForTopic, formatAnchors, resolveModeledRef } from '../utils/pyq.js'
+import { callAI, getCachedContent } from '../utils/ai.js'
+import { pyqAnchorsForTopic, pyqAnchorsTopicThenSection, formatAnchors, resolveModeledRef } from '../utils/pyq.js'
 import { recordAttempt } from '../utils/performance.js'
 import { logResult } from '../utils/bookmarks.js'
+import { filterNovel, rememberGenerated } from '../utils/similarity.js'
+import { catSystem } from '../data/promptContract.js'
+import { buildDailyComposition, getNeedsPractice, ROLE_COPY } from '../utils/dailyPlan.js'
 import LearnPanel from '../components/LearnPanel.jsx'
 import QuestionComposer from '../components/QuestionComposer.jsx'
 import { SECTIONS } from '../data/curriculum.js'
-import { Calculator, ChevronRight, RotateCcw, CheckCircle, XCircle, Newspaper } from 'lucide-react'
+import { Calculator, ChevronRight, RotateCcw, CheckCircle, XCircle, Newspaper, Calendar, Target } from 'lucide-react'
 
-const SYSTEM = `You are a CAT Quantitative Aptitude expert. All questions must be solvable with the given data, mathematically correct, and at the appropriate CAT difficulty. Solutions must be step-by-step with correct arithmetic. Return ONLY valid JSON, no preamble.`
+const SYSTEM = catSystem('QA')
+
+const isoDay = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
 
 const buildQAPrompt = (topic, difficulty, count) => `Generate ${count} CAT-style Quantitative Aptitude questions on: "${topic}". Difficulty: ${difficulty}.
 
@@ -24,7 +29,7 @@ Return ONLY a JSON array:
   "difficulty": "${difficulty}"
 }]`
 
-const PYQ_SYSTEM = `You are a CAT Quantitative Aptitude expert who writes NEW original questions closely modeled on the real CAT questions you're shown (previous-year papers and/or the student's own practice material). Never copy an anchor verbatim — change the numbers/context while keeping the same concept, structure and difficulty. Never claim a new question IS from a real exam year. Return ONLY valid JSON, no preamble.`
+const PYQ_SYSTEM = catSystem('QA', `You write NEW questions closely modeled on the real CAT anchors shown (previous-year papers and/or the student's own practice material): keep each anchor's concept, structure and difficulty but change the numbers and context. Cite the anchor you modeled each question on.`)
 
 const buildPYQPrompt = (topic, anchors, count) => `Topic: "${topic}". Here are ${anchors.length} real CAT question(s) on this topic (from previous-year papers and/or the student's practice sets) as style/difficulty anchors:
 ${formatAnchors(anchors)}
@@ -109,7 +114,7 @@ function TopicPractice({ topic, hasApiKey, onNavigate }) {
     setLoading(true); setQuestions([]); setAnswers({}); setSubmitted(false)
     try {
       const d = await callAI(SYSTEM, buildQAPrompt(topic.name, difficulty, count), 2500)
-      setQuestions(Array.isArray(d) ? d : [])
+      setQuestions(filterNovel(Array.isArray(d) ? d : [], { topicId: topic.id }))
       setStartedAt(Date.now())
     } catch (e) { showToast('Error: ' + e.message, 'error') }
     finally { setLoading(false) }
@@ -130,7 +135,7 @@ function TopicPractice({ topic, hasApiKey, onNavigate }) {
       }
       const d = await callAI(PYQ_SYSTEM, buildPYQPrompt(topic.name, anchors, 5), 3000)
       const list = (Array.isArray(d) ? d : []).map((q) => ({ ...q, reference: resolveModeledRef(q.reference, anchors) }))
-      setQuestions(list)
+      setQuestions(filterNovel(list, { topicId: topic.id }))
       setStartedAt(Date.now())
     } catch (e) { showToast('Error: ' + e.message, 'error') }
     finally { setPyqLoading(false) }
@@ -213,9 +218,114 @@ function TopicPractice({ topic, hasApiKey, onNavigate }) {
   )
 }
 
+// ─── Today's Practice (personalised daily 5) ─────────────────────────────────
+const buildDailySlotPrompt = (slot, anchors) => `Generate ONE CAT-style Quantitative Aptitude question on "${slot.topic}". Difficulty: ${slot.difficulty}.
+${anchors && anchors.length ? `Model it on these real CAT questions (previous-year papers and/or my own practice) — same concept and difficulty, but new numbers and context:\n${formatAnchors(anchors)}\n` : ''}Return ONLY this JSON object (NOT an array):
+{"question":"full question with all data","options":["A) ","B) ","C) ","D) "],"correct":"A|B|C|D","solution":"step-by-step with calculations","concept":"the concept tested","shortcut":"a faster approach or empty string","difficulty":"${slot.difficulty}"${anchors && anchors.length ? ',"reference":"[1]"' : ''}}`
+
+const qa5Key = () => `cat_qa5_${isoDay()}`
+const loadQA5 = () => { try { return JSON.parse(localStorage.getItem(qa5Key()) || '{}') } catch { return {} } }
+const saveQA5 = (r) => localStorage.setItem(qa5Key(), JSON.stringify(r))
+
+function QADailySlot({ slot, index }) {
+  const saved = loadQA5()[index] || {}
+  const [q, setQ] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [answer, setAnswer] = useState(saved.answer ?? null)
+  const [submitted, setSubmitted] = useState(!!saved.submitted)
+  const [startedAt, setStartedAt] = useState(null)
+  const role = ROLE_COPY[slot.role]
+
+  const generate = async () => {
+    setLoading(true)
+    try {
+      const anchors = await pyqAnchorsTopicThenSection('QA', slot.topicId, 3)
+      const d = await getCachedContent(`qa5_${isoDay()}_${index}`, SYSTEM, buildDailySlotPrompt(slot, anchors), 1600)
+      const item = Array.isArray(d) ? d[0] : d
+      if (item && anchors.length) item.reference = resolveModeledRef(item.reference, anchors)
+      if (item) rememberGenerated([item], { topicId: slot.topicId })
+      setQ(item || null)
+      setStartedAt(Date.now())
+    } catch (e) { showToast('Error: ' + e.message, 'error') }
+    finally { setLoading(false) }
+  }
+
+  const submit = () => {
+    setSubmitted(true)
+    const correct = answer === q.correct
+    const timeSec = startedAt ? Math.round((Date.now() - startedAt) / 1000) : 0
+    recordAttempt('QA', slot.topic, correct, timeSec)
+    logResult({ section: 'QA', topic: slot.topic, source: 'quant_daily', stem: q.question, options: q.options, answer: q.correct, explanation: q.solution, isCorrect: correct })
+    const all = loadQA5(); all[index] = { answer, submitted: true, correct }; saveQA5(all)
+  }
+
+  return (
+    <Card>
+      <div className="flex items-center gap-2 mb-3 flex-wrap">
+        <span className="text-xs font-mono text-cat-green font-bold">#{index + 1}</span>
+        <Badge variant={role.color}>{role.label}</Badge>
+        <Badge variant="gray">{slot.difficulty}</Badge>
+        <span className="text-sm font-semibold text-text-primary">{slot.topic}</span>
+        {submitted && q && (answer === q.correct
+          ? <CheckCircle size={15} className="text-cat-green ml-auto" />
+          : <XCircle size={15} className="text-cat-red ml-auto" />)}
+      </div>
+
+      {!q && !loading && (
+        <button onClick={generate} className="w-full py-2.5 bg-cat-green/10 border border-cat-green/40 text-cat-green rounded-xl text-sm font-semibold hover:bg-cat-green/20 transition-all">
+          Start this question
+        </button>
+      )}
+      {loading && <CardSkeleton />}
+      {q && <QuestionCard q={q} idx={index} topic={slot.topic} selected={answer} onSelect={setAnswer} submitted={submitted} />}
+      {q && !submitted && (
+        <button onClick={submit} disabled={!answer} className="w-full py-2.5 bg-cat-green text-white rounded-xl text-sm font-semibold disabled:opacity-40 transition-all">
+          Submit
+        </button>
+      )}
+    </Card>
+  )
+}
+
+function QADaily({ hasApiKey, onNavigate }) {
+  const [plan] = useState(() => buildDailyComposition('QA', 5))
+  const needs = getNeedsPractice('QA', 4)
+
+  if (!hasApiKey) return (
+    <Card className="text-center py-8">
+      <p className="text-sm text-text-secondary mb-3">Add an API key to generate your personalised daily set.</p>
+      <button onClick={() => onNavigate('settings')} className="px-4 py-2 bg-cat-green text-white rounded-xl text-sm font-semibold">Go to Settings</button>
+    </Card>
+  )
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <div className="flex items-center gap-2 mb-1">
+          <Calendar size={15} className="text-cat-green" />
+          <p className="text-sm font-semibold text-text-primary">Today's 5 — built from your performance</p>
+        </div>
+        <p className="text-xs text-text-muted">A weak → revision → new → mixed blend, grounded on previous-year & your practice when available. Rotates daily.</p>
+        {needs.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            <span className="text-[10px] text-text-muted flex items-center gap-1"><Target size={11} /> targeting:</span>
+            {needs.map((t) => (
+              <span key={t.topicId} className="px-2 py-0.5 rounded-lg text-[10px] bg-cat-red/10 text-cat-red border border-cat-red/30">
+                {t.topic}{t.acc != null ? ` · ${t.acc}%` : ''}
+              </span>
+            ))}
+          </div>
+        )}
+      </Card>
+      {plan.map((slot, i) => <QADailySlot key={`${slot.topicId}_${i}`} slot={slot} index={i} />)}
+    </div>
+  )
+}
+
 export default function Quant({ hasApiKey, onNavigate }) {
   const [selectedTopic, setSelectedTopic] = useState(null)
   const [filterTag, setFilterTag] = useState('All')
+  const [view, setView] = useState('daily')
 
   const topics = SECTIONS.QA.topics
   const allTags = ['All', ...new Set(topics.flatMap(t => t.tags))]
@@ -235,6 +345,18 @@ export default function Quant({ hasApiKey, onNavigate }) {
     <div className="animate-fade-in max-w-3xl space-y-5">
       <SectionHeader title="Quantitative Aptitude" subtitle="All QA topics — priority order from most to least important for CAT" />
 
+      <div className="flex gap-2">
+        {[{ id: 'daily', label: "Today's Practice" }, { id: 'topics', label: 'All Topics' }].map((t) => (
+          <button key={t.id} onClick={() => setView(t.id)}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-all ${view === t.id ? 'bg-cat-green text-white border-cat-green' : 'border-border text-text-secondary hover:border-border-light'}`}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {view === 'daily' && <QADaily hasApiKey={hasApiKey} onNavigate={onNavigate} />}
+
+      {view === 'topics' && <>
       <QuestionComposer hasApiKey={hasApiKey} onNavigate={onNavigate} />
 
       <div className="flex gap-2 flex-wrap">
@@ -273,6 +395,7 @@ export default function Quant({ hasApiKey, onNavigate }) {
           </div>
         </div>
       ))}
+      </>}
     </div>
   )
 }

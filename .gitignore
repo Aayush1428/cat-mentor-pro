@@ -12,3 +12,6 @@ MBA Pathshala Questions.zip
 MBA Pathshala Questions/
 .rawpdf/
 .inspect/
+
+# Dataset archives — keep the extracted content, never the zips
+dataset/sources/**/*.zip

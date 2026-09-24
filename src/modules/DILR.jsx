@@ -7,9 +7,11 @@ import { logResult } from '../utils/bookmarks.js'
 import LearnPanel from '../components/LearnPanel.jsx'
 import { SECTIONS } from '../data/curriculum.js'
 import { getDynTopicsBySection, getCapturedByTopic } from '../utils/captured.js'
+import { catSystem } from '../data/promptContract.js'
+import { rankByNeed } from '../utils/dailyPlan.js'
 import { Brain, RotateCcw, Lightbulb, ChevronRight, Sparkles, Calendar, Newspaper, BookOpen } from 'lucide-react'
 
-const SYSTEM = `You are a CAT DILR expert. Generate authentic CAT-style DILR sets. The sets must be solvable with the given information — no ambiguity or missing data. Return ONLY valid JSON, no preamble.`
+const SYSTEM = catSystem('DILR')
 
 const TOPIC_PROMPTS = {
   'LR — Seating Arrangements': (d) => `Generate a CAT-style Linear or Circular Seating Arrangement puzzle. Difficulty: ${d}.
@@ -58,13 +60,6 @@ Return ONLY this JSON:
 {"setup":"the scenario/data description","conditions":["condition 1","condition 2","condition 3"],"questions":[{"q":"question text","options":["A) ","B) ","C) ","D) "],"correct":"A|B|C|D","explanation":"step-by-step solution"}],"approach":"strategy to solve this type of question"}`
 
 // ─── Daily 5 sets (one per LRDI type, grounded on previous-year data) ──────────
-const daySeed = () => { const d = new Date(); return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000) }
-const mulberry32 = (seed) => () => {
-  seed |= 0; seed = (seed + 0x6D2B79F5) | 0
-  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
-  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-  return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-}
 const isoDay = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
 
 // Distinct LRDI set types (name must match a TOPIC_PROMPTS key or fall back to GENERIC_PROMPT;
@@ -84,11 +79,11 @@ const DILR_DAILY_POOL = [
 ]
 
 // Deterministic-per-day plan of 5 slots: a rotating, LR/DI-balanced mix at escalating difficulty.
+// The common planner ranks each pool by need (weak/slow/mistake-heavy set-types float up) while a
+// seeded per-day tiebreak preserves rotation; the LR/DI interleave and difficulty ramp are kept.
 const buildDILRDailyPlan = () => {
-  const rng = mulberry32(daySeed() * 7 + 3) // offset so it differs from the RC daily shuffle
-  const shuffle = (arr) => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]] } return a }
-  const lr = shuffle(DILR_DAILY_POOL.filter(p => p.kind === 'LR'))
-  const di = shuffle(DILR_DAILY_POOL.filter(p => p.kind === 'DI'))
+  const lr = rankByNeed('DILR', DILR_DAILY_POOL.filter(p => p.kind === 'LR'), { saltStr: 'dilr-lr' })
+  const di = rankByNeed('DILR', DILR_DAILY_POOL.filter(p => p.kind === 'DI'), { saltStr: 'dilr-di' })
   const mixed = []
   let i = 0, j = 0, turnLR = true
   while (mixed.length < 5 && (i < lr.length || j < di.length)) {

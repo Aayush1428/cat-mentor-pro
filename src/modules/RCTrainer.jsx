@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Card, Badge, SectionHeader, CardSkeleton, showToast, ScoreRing, TimerDisplay, BookmarkButton } from '../components/ui/index.jsx'
 import { callAI, getCachedContent } from '../utils/ai.js'
 import { pyqAnchorsForTopics, formatAnchors } from '../utils/pyq.js'
-import { recordAttempt, getTopicStats } from '../utils/performance.js'
+import { recordAttempt } from '../utils/performance.js'
 import { logResult, makeId } from '../utils/bookmarks.js'
+import { getTopicNeedByName } from '../utils/dailyPlan.js'
 import { addCard } from '../utils/srs.js'
 import { Languages, Sparkles, RotateCcw, Target, Lightbulb, ChevronRight, Plus, Eye, BookOpen, Wand2, Clock, Star, Calendar, ArrowLeft } from 'lucide-react'
 
@@ -119,15 +120,15 @@ const THEMES = [
   { genre: 'Education & Learning', angles: ['the testing effect and productive difficulty', 'why curiosity resists standardisation', 'the hidden curriculum', 'deliberate practice and expertise', 'the surprising case for some rote learning'] },
 ]
 
-// Find the RC question type the user is weakest at, to target daily practice.
+// Find the RC question type the user is weakest at, to target daily practice. Routed through the
+// common planner so the signal now also reflects tagged mistakes/slowness — not accuracy alone —
+// while keeping the same output (an RC type with enough attempts, or null) and passage logic.
 const weakestRCType = () => {
-  let worst = null, worstAcc = 101
+  const need = getTopicNeedByName('VARC')
+  let worst = null, worstScore = 0
   RC_TYPES.forEach(t => {
-    const s = getTopicStats('VARC', rcTopic(t))
-    if (s.attempts >= 2) {
-      const acc = (s.correct / s.attempts) * 100
-      if (acc < worstAcc) { worstAcc = acc; worst = t }
-    }
+    const n = need[rcTopic(t)]
+    if (n && n.attempts >= 2 && n.score > worstScore) { worstScore = n.score; worst = t }
   })
   return worst
 }

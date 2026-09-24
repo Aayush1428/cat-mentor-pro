@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://cat-mentor-pro/dataset/prompts/schemas/lrdi.schema.json",
+  "title": "LRDI generation output",
+  "description": "Shape an LLM must return for ONE complete DILR set (never isolated questions). Different set types use different context keys (setup/context/caselet, conditions/data/table) — all optional, but at least a scenario and the questions[] are required.",
+  "type": "object",
+  "required": ["questions"],
+  "properties": {
+    "setId": { "type": "string", "description": "Optional stable id for the set." },
+    "type": { "type": "string", "description": "Set type, e.g. 'Distribution', 'Games & Tournaments', 'DI — Tables'." },
+    "setup": { "type": "string", "description": "Scenario / context description (LR sets)." },
+    "context": { "type": "string", "description": "What the data represents (DI sets)." },
+    "caselet": { "type": "string", "description": "Paragraph-based DI text with embedded numbers." },
+    "conditions": { "type": "array", "items": { "type": "string" }, "description": "Constraints that make the set solvable." },
+    "data": { "type": "string", "description": "Data as plain text (values, results)." },
+    "table": { "type": "string", "description": "A data table formatted as plain text." },
+    "difficulty": { "type": "string", "enum": ["Easy", "Medium", "Hard"] },
+    "metadata": {
+      "type": "object",
+      "description": "Optional per-set difficulty breakdown (blueprint LRDI metadata).",
+      "properties": {
+        "setType": { "type": "string" },
+        "setSelectionDifficulty": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "calculationDifficulty": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "logicalComplexity": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "cases": { "type": "integer" }
+      },
+      "additionalProperties": true
+    },
+    "questions": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "required": ["q", "options", "correct"],
+        "properties": {
+          "q": { "type": "string", "minLength": 1 },
+          "options": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": { "type": "string", "pattern": "^[A-D]\\)" }
+          },
+          "correct": { "type": "string", "enum": ["A", "B", "C", "D"] },
+          "explanation": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "approach": { "type": "string", "description": "How to start / crack this set type." },
+    "reference": { "type": "string", "description": "'Modeled on <anchor>' or empty." }
+  },
+  "additionalProperties": true
+}
