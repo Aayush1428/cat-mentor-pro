@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-09-21T21:37:59.807Z",
-  "count": 3,
+  "generatedAt": "2026-10-22T23:55:30.396Z",
+  "count": 134,
   "byKind": {
-    "practice": 2,
-    "previous-year": 1
+    "practice": 1,
+    "previous-year": 133
   },
   "byTopic": {
     "DILR:di_pie": [
@@ -25,42 +25,2046 @@
         "sectionId": "DILR"
       }
     ],
-    "QA:qa_percentages": [
+    "QA:qa_averages": [
       {
-        "question": "A number, when increased by 20%, becomes 96. What is the number?",
+        "question": "Elevator weight limit 630kg; heaviest 57kg, lightest 53kg. Max possible number of people is",
+        "options": [],
+        "correct": "11",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Average, Mixture and Allegation",
+        "topicId": "qa_averages",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Class: 20 boys, 30 girls. Mid-sem avg girls 5 higher than boys. Final: girls avg drops 3, class avg increases 2. Increase in boys' avg is 1. 9.5 2. 10 3. 4.5 4. 6",
+        "options": [],
+        "correct": "A",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Average, Mixture and Allegation",
+        "topicId": "qa_averages",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Avg height of 22 toddlers increases by 2 inches when 2 leave; avg height of these two is 1/3 of original 22's avg. Avg height, inches, of remaining 20 is",
         "options": [
-          "A) 76",
-          "B) 80",
-          "C) 115.2",
-          "D) 120"
+          "A) 30",
+          "B) 28",
+          "C) 32",
+          "D) 26"
+        ],
+        "correct": "C",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Average, Mixture and Allegation",
+        "topicId": "qa_averages",
+        "sectionId": "QA"
+      },
+      {
+        "question": "CAT aspirant's average increases by 1 if first 10 tests excluded, decreases by 1 if last 10 excluded. Avg of first 10 =20, last 10=30. Total tests taken is",
+        "options": [],
+        "correct": "60",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Average, Mixture and Allegation",
+        "topicId": "qa_averages",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Ramesh & Gautam among 22 students. Ramesh scores 82.5. Avg of 21 (excl. Gautam) is 62. Avg of all 22 is one more than avg of 21 (excl. Ramesh). Score of Gautam is",
+        "options": [
+          "A) 51",
+          "B) 53",
+          "C) 49",
+          "D) 48"
+        ],
+        "correct": "A",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2019",
+        "sourceKind": "previous-year",
+        "topic": "Average, Mixture and Allegation",
+        "topicId": "qa_averages",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Average of 30 integers is 5; 20 of them do not exceed 5. Highest possible average of these 20 is",
+        "options": [
+          "A) 4",
+          "B) 5",
+          "C) 4.5",
+          "D) 3.5"
+        ],
+        "correct": "C",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2019",
+        "sourceKind": "previous-year",
+        "topic": "Average, Mixture and Allegation",
+        "topicId": "qa_averages",
+        "sectionId": "QA"
+      },
+      {
+        "question": "A,B,C positive integers; A + mean(B,C)=5; B + mean(A,C)=7. Sum of A and B is",
+        "options": [
+          "A) 6",
+          "B) 4",
+          "C) 7",
+          "D) 5"
+        ],
+        "correct": "A",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2020",
+        "sourceKind": "previous-year",
+        "topic": "Average, Mixture and Allegation",
+        "topicId": "qa_averages",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Group of 10 students; mean of lowest 9 = 42, mean of highest 9 = 47. Max possible mean exceeds min possible mean by",
+        "options": [
+          "A) 5",
+          "B) 3",
+          "C) 4",
+          "D) 6"
+        ],
+        "correct": "C",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2020",
+        "sourceKind": "previous-year",
+        "topic": "Average, Mixture and Allegation",
+        "topicId": "qa_averages",
+        "sectionId": "QA"
+      }
+    ],
+    "QA:qa_functions": [
+      {
+        "question": "f(x)=2x-5, g(x)=7-2x. |f(x)+g(x)|=|f(x)|+|g(x)| iff",
+        "options": [
+          "A) 5/2<x<7/2",
+          "B) x≤5/2 or x≥7/2",
+          "C) x<5/2 or x≥7/2",
+          "D) 5/2≤x≤7/2"
+        ],
+        "correct": "D",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Functions and Graphs",
+        "topicId": "qa_functions",
+        "sectionId": "QA"
+      },
+      {
+        "question": "a,b,c,d integers, sum=30. Min possible (a-b)²+(a-c)²+(a-d)² is",
+        "options": [],
+        "correct": "2",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Maxima Minima",
+        "topicId": "qa_functions",
+        "sectionId": "QA"
+      },
+      {
+        "question": "AM of x,y,z is 80; of x,y,z,v is 75, u=(x+y)/2, v=(y+z)/2. x≥z. Min possible x is",
+        "options": [],
+        "correct": "105",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Maxima Minima",
+        "topicId": "qa_functions",
+        "sectionId": "QA"
+      },
+      {
+        "question": "f(x)=x²+ax+b, g(x)=f(x+1)-f(x-1). f(x)≥0 for all x, g(20)=72. Smallest possible b is",
+        "options": [
+          "A) 16",
+          "B) 1",
+          "C) 4",
+          "D) 0"
+        ],
+        "correct": "C",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2020",
+        "sourceKind": "previous-year",
+        "topic": "Functions and Graphs",
+        "topicId": "qa_functions",
+        "sectionId": "QA"
+      },
+      {
+        "question": "100 students, x1...x12 birthdays per month. x0=max(x1,...,x12). Smallest possible x0 is",
+        "options": [
+          "A) 8",
+          "B) 10",
+          "C) 12",
+          "D) 9"
+        ],
+        "correct": "D",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2020",
+        "sourceKind": "previous-year",
+        "topic": "Maxima Minima",
+        "topicId": "qa_functions",
+        "sectionId": "QA"
+      },
+      {
+        "question": "x,y positive, x+y=102. Min possible 2601(1+1/x)(1+1/y) is",
+        "options": [],
+        "correct": "2704",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2020",
+        "sourceKind": "previous-year",
+        "topic": "Maxima Minima",
+        "topicId": "qa_functions",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Real x, max possible x/√(1+x⁴) is",
+        "options": [
+          "A) 1",
+          "B) 1/2",
+          "C) 1/√2",
+          "D) 1/√3"
+        ],
+        "correct": "C",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2020",
+        "sourceKind": "previous-year",
+        "topic": "Maxima Minima",
+        "topicId": "qa_functions",
+        "sectionId": "QA"
+      },
+      {
+        "question": "f(x)=x²-7x, g(x)=x+3. Min value of g(g(x))-3x is",
+        "options": [
+          "A) -20",
+          "B) -15",
+          "C) -12",
+          "D) -16"
+        ],
+        "correct": "D",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2021",
+        "sourceKind": "previous-year",
+        "topic": "Functions and Graphs",
+        "topicId": "qa_functions",
+        "sectionId": "QA"
+      }
+    ],
+    "QA:qa_triangles": [
+      {
+        "question": "Triangle ABC sides 40,25,35 ft. GBC cut off, G=centroid. Remaining area, sq ft, is",
+        "options": [
+          "A) 225√3",
+          "B) 500/√3",
+          "C) 275/√3",
+          "D) 250/√3"
         ],
         "correct": "B",
-        "concept": "Reverse percentage",
-        "difficulty": "Easy",
-        "reference": "CAT previous year",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
         "sourceKind": "previous-year",
-        "topic": "Percentages",
+        "topic": "Geometry",
+        "topicId": "qa_triangles",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Regular hexagon ABCDEF side 1cm. Area of square with AC as side, sq cm, is",
+        "options": [
+          "A) 3√2",
+          "B) 3",
+          "C) 4",
+          "D) √3"
+        ],
+        "correct": "B",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Geometry",
+        "topicId": "qa_triangles",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Cyclic quadrilateral ABCD center O. ∠COD=120° , ∠BAC=30° . ∠BCD, degrees, is",
+        "options": [],
+        "correct": "90",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Geometry",
+        "topicId": "qa_triangles",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Interior point P of right isosceles triangle ABC, hypotenuse AB. Perpendicular distance from P to each side is 4(√2-1) cm. Area, sq cm, of ABC is",
+        "options": [],
+        "correct": "16",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Geometry",
+        "topicId": "qa_triangles",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Right triangle ABC, hypotenuse BC. AB=15km, AC=20km. Min time, minutes, to reach hypotenuse from A at 30km/h is",
+        "options": [],
+        "correct": "24",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Geometry",
+        "topicId": "qa_triangles",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Circle radius 1cm, center O. Arc AB angle 60° at O. R=region bounded by OA,OB,arc AB. C,D on OA,OB, OC=OD, area OCD=half of R. Length OC, cm, is",
+        "options": [
+          "A) (π/4)^½",
+          "B) (π/6)^½",
+          "C) (π/4√3)^½",
+          "D) (π/3√3)^½"
+        ],
+        "correct": "D",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Geometry",
+        "topicId": "qa_triangles",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Rectangle ABCD inscribed in circle radius 13cm. Possible length,breadth pairs",
+        "options": [
+          "A) 25,10",
+          "B) 24,12",
+          "C) 25,9",
+          "D) 24,19"
+        ],
+        "correct": "D",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Geometry",
+        "topicId": "qa_triangles",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Parallelogram ABCD area 72 sq cm, CD=9cm, AD=16cm. P on CD, AP⊥CD. Area ΔAPD, sq cm, is",
+        "options": [
+          "A) 18√3",
+          "B) 24√3",
+          "C) 32√3",
+          "D) 12√3"
+        ],
+        "correct": "C",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Geometry",
+        "topicId": "qa_triangles",
+        "sectionId": "QA"
+      }
+    ],
+    "QA:qa_inequalities": [
+      {
+        "question": "Integers n satisfying (n-5)(n-10)-3(n-2)≤0 is",
+        "options": [],
+        "correct": "11",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Inequalities and Modulus",
+        "topicId": "qa_inequalities",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Smallest integer n: n³-11n²+32n-28>0 is",
+        "options": [],
+        "correct": "8",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Inequalities and Modulus",
+        "topicId": "qa_inequalities",
+        "sectionId": "QA"
+      },
+      {
+        "question": "S: |x|+|y|≤2, |x|≥1. Area of S is",
+        "options": [],
+        "correct": "2",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2019",
+        "sourceKind": "previous-year",
+        "topic": "Inequalities and Modulus",
+        "topicId": "qa_inequalities",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Product of distinct roots of |x²-x-6|=x+2 is",
+        "options": [
+          "A) -4",
+          "B) -16",
+          "C) -8",
+          "D) -24"
+        ],
+        "correct": "B",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2019",
+        "sourceKind": "previous-year",
+        "topic": "Inequalities and Modulus",
+        "topicId": "qa_inequalities",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Area satisfying |x|-y≤1, y≥0, y≤1 is",
+        "options": [],
+        "correct": "3",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2020",
+        "sourceKind": "previous-year",
+        "topic": "Inequalities and Modulus",
+        "topicId": "qa_inequalities",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Pairs (x,a): x²-2|x|+|a-2|=0. Ways is",
+        "options": [
+          "A) 7",
+          "B) 6",
+          "C) 4",
+          "D) 5"
+        ],
+        "correct": "A",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2020",
+        "sourceKind": "previous-year",
+        "topic": "Inequalities and Modulus",
+        "topicId": "qa_inequalities",
+        "sectionId": "QA"
+      },
+      {
+        "question": "m,n naturals, n even, 0.2<m/20, n/m, n/11<0.5. m-2n equals",
+        "options": [
+          "A) 4",
+          "B) 2",
+          "C) 1",
+          "D) 3"
+        ],
+        "correct": "C",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2020",
+        "sourceKind": "previous-year",
+        "topic": "Inequalities and Modulus",
+        "topicId": "qa_inequalities",
+        "sectionId": "QA"
+      },
+      {
+        "question": "f(x)=(x²+2x-15)/(x²-7x-18) negative iff",
+        "options": [
+          "A) -5<x<-2 or 3<x<9",
+          "B) -2<x<3 or x>9",
+          "C) x<-5 or 3<x<9",
+          "D) x<-5 or -2<x<3"
+        ],
+        "correct": "A",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2021",
+        "sourceKind": "previous-year",
+        "topic": "Inequalities and Modulus",
+        "topicId": "qa_inequalities",
+        "sectionId": "QA"
+      }
+    ],
+    "QA:qa_linear_eq": [
+      {
+        "question": "x-y-z=25, positive integers, x≤40,y≤12,z≤12. Number of solutions is",
+        "options": [
+          "A) 101",
+          "B) 99",
+          "C) 87",
+          "D) 105"
+        ],
+        "correct": "B",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Linear and Special Equations",
+        "topicId": "qa_linear_eq",
+        "sectionId": "QA"
+      },
+      {
+        "question": "x+1=x², x>0. 2x⁴ is",
+        "options": [
+          "A) 6+4√5",
+          "B) 3+5√5",
+          "C) 5+3√5",
+          "D) 7+3√5"
+        ],
+        "correct": "D",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Quadratic Equations",
+        "topicId": "qa_linear_eq",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Min possible sum of squares of roots of x²+(a+3)x-(a+5)=0 is",
+        "options": [
+          "A) 1",
+          "B) 2",
+          "C) 3",
+          "D) 4"
+        ],
+        "correct": "C",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Quadratic Equations",
+        "topicId": "qa_linear_eq",
+        "sectionId": "QA"
+      },
+      {
+        "question": "u²+(u-2v-1)²=-4v(u+v). Value of u+3v is",
+        "options": [
+          "A) 1/4",
+          "B) 1/2",
+          "C) 0",
+          "D) -1/4"
+        ],
+        "correct": "D",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Quadratic Equations",
+        "topicId": "qa_linear_eq",
+        "sectionId": "QA"
+      },
+      {
+        "question": "a,b integers: 2x²-ax+2>0 & x²-bx+8≥0 for all real x. Largest possible (2a-6b) is",
+        "options": [],
+        "correct": "36",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Quadratic Equations",
+        "topicId": "qa_linear_eq",
+        "sectionId": "QA"
+      },
+      {
+        "question": "a²+b²=25, x²+y²=169, ax+by=65. k=ay-bx. Then",
+        "options": [
+          "A) k=0",
+          "B) k>5/13",
+          "C) k=5/13",
+          "D) 0<k≤5/13"
+        ],
+        "correct": "A",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2019",
+        "sourceKind": "previous-year",
+        "topic": "Higher Degree Equations",
+        "topicId": "qa_linear_eq",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Real roots of 2cos(x(x+1))=2^x+2^(-x). Count is",
+        "options": [
+          "A) 0",
+          "B) Infinite",
+          "C) 1",
+          "D) 2"
+        ],
+        "correct": "C",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2019",
+        "sourceKind": "previous-year",
+        "topic": "Quadratic Equations",
+        "topicId": "qa_linear_eq",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Solutions of |x|(6×²+1)=5x². Count is",
+        "options": [],
+        "correct": "5",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2019",
+        "sourceKind": "previous-year",
+        "topic": "Quadratic Equations",
+        "topicId": "qa_linear_eq",
+        "sectionId": "QA"
+      }
+    ],
+    "QA:qa_logs": [
+      {
+        "question": "log₃x=log₁₂y=a. G=geometric mean of x,y. log₆G equals",
+        "options": [
+          "A) √a",
+          "B) 2a",
+          "C) a/2",
+          "D) a"
+        ],
+        "correct": "D",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Logarithms",
+        "topicId": "qa_logs",
+        "sectionId": "QA"
+      },
+      {
+        "question": "log_0.008√5 + log√3 81 - 7 equals",
+        "options": [
+          "A) 1/3",
+          "B) 2/3",
+          "C) 5/6",
+          "D) 7/6"
+        ],
+        "correct": "C",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Logarithms",
+        "topicId": "qa_logs",
+        "sectionId": "QA"
+      },
+      {
+        "question": "log₃5=log₅(2+x). Which true?",
+        "options": [
+          "A) 0<x<3",
+          "B) 23<x<30",
+          "C) x>30",
+          "D) 3<x<23"
+        ],
+        "correct": "D",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Logarithms",
+        "topicId": "qa_logs",
+        "sectionId": "QA"
+      },
+      {
+        "question": "log(2^a×3^b×5^c) is AM of log(2²×3³×5), log(2⁶×3×5⁷), log(2×3²×5⁴). a equals",
+        "options": [],
+        "correct": "3",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Logarithms",
+        "topicId": "qa_logs",
+        "sectionId": "QA"
+      },
+      {
+        "question": "9^(2x-1)-81^(x-1)=1944. x is",
+        "options": [
+          "A) 3",
+          "B) 9/4",
+          "C) 4/9",
+          "D) 1/3"
+        ],
+        "correct": "B",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Surds and Indices",
+        "topicId": "qa_logs",
+        "sectionId": "QA"
+      },
+      {
+        "question": "9^(x-1/2)-2^(2x-2)=4^x-3^(2x-3). x is",
+        "options": [
+          "A) 3/2",
+          "B) 2/5",
+          "C) 3/4",
+          "D) 4/9"
+        ],
+        "correct": "A",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Surds and Indices",
+        "topicId": "qa_logs",
+        "sectionId": "QA"
+      },
+      {
+        "question": "2^x=3^(log₅2), x positive. x equals",
+        "options": [
+          "A) log₅9",
+          "B) 1+log₅(3/5)",
+          "C) 1+log₃(5/3)",
+          "D) log₅8"
+        ],
+        "correct": "B",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Logarithms",
+        "topicId": "qa_logs",
+        "sectionId": "QA"
+      },
+      {
+        "question": "log₁₂81=p. 3[(4-p)/(4+p)] equals",
+        "options": [
+          "A) log₂8",
+          "B) log₆8",
+          "C) log₄16",
+          "D) log₆16"
+        ],
+        "correct": "B",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Logarithms",
+        "topicId": "qa_logs",
+        "sectionId": "QA"
+      }
+    ],
+    "QA:qa_mensuration": [
+      {
+        "question": "Right isosceles triangle ABC, hypotenuse BC. Semicircle BQC, arc BPC centered at A between BC & BQC. AB=6cm. Area enclosed by BPC & BQC, sq cm, is",
+        "options": [
+          "A) 9π-18",
+          "B) 18",
+          "C) 9π",
+          "D) 9"
+        ],
+        "correct": "B",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Mensuration",
+        "topicId": "qa_mensuration",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Cube melted into 5 cubes, volume ratio 1:1:8:27:27. % by which sum of surface areas exceeds original, nearest to",
+        "options": [
+          "A) 10",
+          "B) 50",
+          "C) 60",
+          "D) 20"
+        ],
+        "correct": "B",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Mensuration",
+        "topicId": "qa_mensuration",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Ball diameter 4cm on hollow cylinder, height 3cm, volume 9π cm³. Vertical distance, cm, from top of ball to base of cylinder is",
+        "options": [],
+        "correct": "6",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Mensuration",
+        "topicId": "qa_mensuration",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Three sides of rectangular park total 400ft. Area max when longer side, ft, is",
+        "options": [],
+        "correct": "200",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Mensuration",
+        "topicId": "qa_mensuration",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Vertical pillar, trapezium cross-section, parallel sides 10cm,20cm, equal other sides, height between parallels 12cm, pillar height 20cm. Total area of all 6 surfaces, sq cm, is",
+        "options": [
+          "A) 1300",
+          "B) 1340",
+          "C) 1480",
+          "D) 1520"
+        ],
+        "correct": "C",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Mensuration",
+        "topicId": "qa_mensuration",
+        "sectionId": "QA"
+      },
+      {
+        "question": "E,F,G,H on sides of square ABCD. EFGH square, area=62.5% of ABCD, CG>EB. Ratio EB:CG is",
+        "options": [
+          "A) 1:3",
+          "B) 4:9",
+          "C) 2:5",
+          "D) 3:8"
+        ],
+        "correct": "A",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Mensuration",
+        "topicId": "qa_mensuration",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Rectangle ABCD area 768 sq cm; semicircle diameter AB, area 72π sq cm removed. Perimeter of leftover, cm, is",
+        "options": [
+          "A) 88+12π",
+          "B) 80+16π",
+          "C) 86+8π",
+          "D) 82+24π"
+        ],
+        "correct": "A",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Mensuration",
+        "topicId": "qa_mensuration",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Rectangle: area:perimeter² = 1:25. Ratio shorter:longer side is",
+        "options": [
+          "A) 3:8",
+          "B) 2:9",
+          "C) 1:4",
+          "D) 1:3"
+        ],
+        "correct": "C",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Mensuration",
+        "topicId": "qa_mensuration",
+        "sectionId": "QA"
+      }
+    ],
+    "QA:qa_percentages": [
+      {
+        "question": "Arun's age=40% Barun's. Later Arun's age=half Barun's. % increase in Barun's age during period is",
+        "options": [],
+        "correct": "20",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Percentage",
+        "topicId": "qa_percentages",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Ravi invests 50% savings in FD, 30% of rest in stocks, rest in bank account. Bank total (savings+FD) = Rs 59500. Total monthly savings, Rs, is",
+        "options": [],
+        "correct": "70000",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Percentage",
+        "topicId": "qa_percentages",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Girls appearing = 2×boys. 30% girls & 45% boys admitted. % not admitted is",
+        "options": [
+          "A) 35",
+          "B) 50",
+          "C) 60",
+          "D) 65"
+        ],
+        "correct": "D",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Percentage",
+        "topicId": "qa_percentages",
+        "sectionId": "QA"
+      },
+      {
+        "question": "15% shirts defective, 20% of rest sold domestic, remaining 8840 exported. Total shirts produced is",
+        "options": [
+          "A) 13600",
+          "B) 13000",
+          "C) 13400",
+          "D) 14000"
+        ],
+        "correct": "B",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Percentage",
+        "topicId": "qa_percentages",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Food grain production +40%, per capita production +27%. % population increase, nearest to",
+        "options": [
+          "A) 16",
+          "B) 13",
+          "C) 10",
+          "D) 7"
+        ],
+        "correct": "C",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Percentage",
+        "topicId": "qa_percentages",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Max score N, pass=45% of N. Candidate scores 36, falls short of pass by 68%. Which is correct?",
+        "options": [
+          "A) N≤200",
+          "B) 243≤N≤252",
+          "C) N≥253",
+          "D) 201≤N≤242"
+        ],
+        "correct": "B",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Percentage",
+        "topicId": "qa_percentages",
+        "sectionId": "QA"
+      },
+      {
+        "question": "60% girls, rest boys; girls=boys+30. 68% pass (incl 30 boys). % girls who don't pass is",
+        "options": [],
+        "correct": "20",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2019",
+        "sourceKind": "previous-year",
+        "topic": "Percentage",
+        "topicId": "qa_percentages",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Meena scores 40%, after +50% review still fails by 35 marks. If post-review score +20%, exceeds passing by 7. Passing % needed is",
+        "options": [
+          "A) 75",
+          "B) 80",
+          "C) 60",
+          "D) 70"
+        ],
+        "correct": "D",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2019",
+        "sourceKind": "previous-year",
+        "topic": "Percentage",
         "topicId": "qa_percentages",
         "sectionId": "QA"
       }
     ],
-    "VARC:vocab_words": [
+    "QA:qa_pc": [
       {
-        "question": "Select the word that best fills the blank: Despite the setback, her ____ optimism never wavered.",
+        "question": "5 diameters (10 points) + center O of circle. Ways to choose 3 points forming a triangle is",
+        "options": [],
+        "correct": "160",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Permutations and Combinations",
+        "topicId": "qa_pc",
+        "sectionId": "QA"
+      },
+      {
+        "question": "7 identical erasers among 4 kids, each ≥1, ≤3. Ways is",
         "options": [
-          "A) fickle",
-          "B) unflagging",
-          "C) tepid",
-          "D) waning"
+          "A) 16",
+          "B) 20",
+          "C) 14",
+          "D) 15"
+        ],
+        "correct": "A",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Permutations and Combinations",
+        "topicId": "qa_pc",
+        "sectionId": "QA"
+      },
+      {
+        "question": "8 identical pens among Amal,Bimal,Kamal: Amal≥1, Bimal≥2, Kamal≥3. Ways is",
+        "options": [],
+        "correct": "6",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Permutations and Combinations",
+        "topicId": "qa_pc",
+        "sectionId": "QA"
+      },
+      {
+        "question": "4-digit numbers divisible by 6 from digits 0,2,3,4,6, no repeat, 0 not leftmost. Count is",
+        "options": [],
+        "correct": "50",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Permutations and Combinations",
+        "topicId": "qa_pc",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Numbers (2+ digits) from 1-9, each digit used ≤once, ascending order. Count is",
+        "options": [],
+        "correct": "502",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Permutations and Combinations",
+        "topicId": "qa_pc",
+        "sectionId": "QA"
+      },
+      {
+        "question": "43 junior, 51 senior participants; round robin within each level, no cross matches. Girl-girl junior matches=153, boy-boy senior matches=276. Boy vs girl matches count is",
+        "options": [],
+        "correct": "1098",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Permutations and Combinations",
+        "topicId": "qa_pc",
+        "sectionId": "QA"
+      },
+      {
+        "question": "4-digit numbers >1000, all digits distinct, 7 before 3. Count is",
+        "options": [],
+        "correct": "315",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2020",
+        "sourceKind": "previous-year",
+        "topic": "Permutations and Combinations",
+        "topicId": "qa_pc",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Groups of ≥3 distinct numbers from 1-8, must include 3&5, never both 7&8. Count is",
+        "options": [],
+        "correct": "47",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2021",
+        "sourceKind": "previous-year",
+        "topic": "Permutations and Combinations",
+        "topicId": "qa_pc",
+        "sectionId": "QA"
+      }
+    ],
+    "QA:qa_profit": [
+      {
+        "question": "15% discount still gives 2% profit. Which ensures 20% profit?",
+        "options": [
+          "A) 5% discount",
+          "B) 2% discount",
+          "C) Increase retail 2%",
+          "D) Sell at retail price"
+        ],
+        "correct": "D",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Profit, Loss and Discount",
+        "topicId": "qa_profit",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Fatima sells 60 toys at 40% discount, 20% profit. 10 destroyed. Discount needed on rest for same profit is",
+        "options": [
+          "A) 30%",
+          "B) 25%",
+          "C) 24%",
+          "D) 28%"
+        ],
+        "correct": "D",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Profit, Loss and Discount",
+        "topicId": "qa_profit",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Manufacturer→wholesaler +10%, wholesaler→retailer +30%, retailer→customer +50%. Customer pays Rs4290. Manufacturing cost, Rs, is",
+        "options": [
+          "A) 1500",
+          "B) 2000",
+          "C) 2500",
+          "D) 3000"
         ],
         "correct": "B",
-        "concept": "Word usage in context",
+        "concept": "",
         "difficulty": "Medium",
-        "reference": "my practice set",
-        "sourceKind": "practice",
-        "topic": "Word Usage & Fill-in-Blanks",
-        "topicId": "vocab_words",
-        "sectionId": "VARC"
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Profit, Loss and Discount",
+        "topicId": "qa_profit",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Mayank buys candies Rs15/dozen & Rs12/dozen (equal quantities), sells all @Rs16.50/dozen, profit Rs150. Total dozens bought is",
+        "options": [
+          "A) 50",
+          "B) 30",
+          "C) 25",
+          "D) 45"
+        ],
+        "correct": "A",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Profit, Loss and Discount",
+        "topicId": "qa_profit",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Medium mango price = half of good. Buys 80kg good+40kg medium, sells all at common price 10% less than good's buy price. Overall profit is",
+        "options": [
+          "A) 6%",
+          "B) 8%",
+          "C) 10%",
+          "D) 12%"
+        ],
+        "correct": "B",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Profit, Loss and Discount",
+        "topicId": "qa_profit",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Pen 5% loss + book 15% gain = Rs7 gain. Pen 5% gain + book 10% gain = Rs13 gain. CP of book, Rs, is",
+        "options": [
+          "A) 80",
+          "B) 85",
+          "C) 100",
+          "D) 95"
+        ],
+        "correct": "A",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2019",
+        "sourceKind": "previous-year",
+        "topic": "Profit, Loss and Discount",
+        "topicId": "qa_profit",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Mukesh: 10 bicycles same price, 6 sold +25%, 4 sold -25%. Total profit Rs2000. Purchase price/bicycle, Rs, is",
+        "options": [
+          "A) 2000",
+          "B) 6000",
+          "C) 8000",
+          "D) 4000"
+        ],
+        "correct": "D",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2019",
+        "sourceKind": "previous-year",
+        "topic": "Profit, Loss and Discount",
+        "topicId": "qa_profit",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Two tables CP p, sold to Amal +20%, Asim -20%. Amal sells to Bimal +30%, Asim sells to Barun -30%. Payments x,y. (x-y)/p equals",
+        "options": [
+          "A) 1",
+          "B) 1.2",
+          "C) 0.7",
+          "D) 0.50"
+        ],
+        "correct": "A",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2019",
+        "sourceKind": "previous-year",
+        "topic": "Profit, Loss and Discount",
+        "topicId": "qa_profit",
+        "sectionId": "QA"
+      }
+    ],
+    "QA:qa_ratio": [
+      {
+        "question": "C1:C2:C3 profits=9:10:8; C2:C4:C5=18:19:20. C5=C1+Rs19cr. Total profit (Rs) of all 5 is",
+        "options": [
+          "A) 438cr",
+          "B) 435cr",
+          "C) 348cr",
+          "D) 345cr"
+        ],
+        "correct": "A",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Ratio Proportion and Variation",
+        "topicId": "qa_ratio",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Popcorn large:super:jumbo=7:17:16; chips=6:15:14. Total popcorn=total chips packets. Jumbo popcorn:jumbo chips ratio is",
+        "options": [
+          "A) 1:1",
+          "B) 8:7",
+          "C) 4:3",
+          "D) 6:5"
+        ],
+        "correct": "A",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Ratio Proportion and Variation",
+        "topicId": "qa_ratio",
+        "sectionId": "QA"
+      },
+      {
+        "question": "a:b=3:4, b:c=2:1, positive integers. Possible value of a+b+c is",
+        "options": [
+          "A) 201",
+          "B) 205",
+          "C) 207",
+          "D) 210"
+        ],
+        "correct": "C",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Ratio Proportion and Variation",
+        "topicId": "qa_ratio",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Raju:Lalitha marbles=4:9. Lalitha gives some to Raju, new ratio=5:6. Fraction of Lalitha's original given is",
+        "options": [
+          "A) 1/4",
+          "B) 1/5",
+          "C) 6/19",
+          "D) 7/33"
+        ],
+        "correct": "D",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Ratio Proportion and Variation",
+        "topicId": "qa_ratio",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Amal:Bimal scores=11:14. Both +same amount, new ratio=47:56. Bimal's new:original score is",
+        "options": [
+          "A) 3:2",
+          "B) 4:3",
+          "C) 5:4",
+          "D) 8:5"
+        ],
+        "correct": "B",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Ratio Proportion and Variation",
+        "topicId": "qa_ratio",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Rama's score=1/12 of (Mohan+Anjali). After +6 each, Anjali:Mohan:Rama=11:10:3. Anjali exceeds Rama by",
+        "options": [
+          "A) 26",
+          "B) 32",
+          "C) 24",
+          "D) 35"
+        ],
+        "correct": "B",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2019",
+        "sourceKind": "previous-year",
+        "topic": "Ratio Proportion and Variation",
+        "topicId": "qa_ratio",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Amal:Sunil=3:2, Sunil:Mita=4:5. Diff between largest & smallest share=Rs400. Sunil's share, Rs, is",
+        "options": [],
+        "correct": "800",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2020",
+        "sourceKind": "previous-year",
+        "topic": "Ratio Proportion and Variation",
+        "topicId": "qa_ratio",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Queue: ahead:behind Pinky=3:5. Total<300. Max ahead is",
+        "options": [],
+        "correct": "111",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2022",
+        "sourceKind": "previous-year",
+        "topic": "Ratio Proportion and Variation",
+        "topicId": "qa_ratio",
+        "sectionId": "QA"
+      }
+    ],
+    "QA:qa_progressions": [
+      {
+        "question": "AP positive common diff: (7th term)²=3rd×17th term. Ratio first term:common diff is",
+        "options": [
+          "A) 2:3",
+          "B) 3:2",
+          "C) 3:4",
+          "D) 4:3"
+        ],
+        "correct": "A",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Series and Sequences",
+        "topicId": "qa_progressions",
+        "sectionId": "QA"
+      },
+      {
+        "question": "AP a1=3,a2=7,...,a3n. Sum=1830. Smallest m: m(a1+... +an)>1830?",
+        "options": [
+          "A) 8",
+          "B) 9",
+          "C) 10",
+          "D) 11"
+        ],
+        "correct": "B",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Series and Sequences",
+        "topicId": "qa_progressions",
+        "sectionId": "QA"
+      },
+      {
+        "question": "5 consecutive odd numbers a1..a5. New sequence: 5 consecutive evens ending 2a3, sum=450. a5 is",
+        "options": [],
+        "correct": "51",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Series and Sequences",
+        "topicId": "qa_progressions",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Infinite GP: an=3(a(n+1)+a(n+2)+×××). Sum=32. a5 is",
+        "options": [
+          "A) 1/32",
+          "B) 2/32",
+          "C) 3/32",
+          "D) 4/32"
+        ],
+        "correct": "C",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Series and Sequences",
+        "topicId": "qa_progressions",
+        "sectionId": "QA"
+      },
+      {
+        "question": "a1=1/(2×5), a2=1/(5×8), a3=1/(8×11),... Sum a1+...+a100 is",
+        "options": [
+          "A) 25/151",
+          "B) 1/2",
+          "C) 1/4",
+          "D) 111/55"
+        ],
+        "correct": "A",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Series and Sequences",
+        "topicId": "qa_progressions",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Equilateral T1 side 24cm, T2 from midpoints of T1, T3 from T2, etc. Sum of areas of infinite triangles, sq cm, is",
+        "options": [
+          "A) 192√3",
+          "B) 164√3",
+          "C) 248√3",
+          "D) 188√3"
+        ],
+        "correct": "A",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Series and Sequences",
+        "topicId": "qa_progressions",
+        "sectionId": "QA"
+      },
+      {
+        "question": "x,y,z positive reals in GP, x<y<z. 5x,16y,12z in AP. Common ratio of GP is",
+        "options": [
+          "A) 1/6",
+          "B) 3/6",
+          "C) 3/2",
+          "D) 5/2"
+        ],
+        "correct": "D",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Series and Sequences",
+        "topicId": "qa_progressions",
+        "sectionId": "QA"
+      },
+      {
+        "question": "a1<a2<...<a52 positive integers. Mean of all = mean(a2..a52) - 1. a52=100. Largest possible a1 is 1. 48 2. 20 3. 45 4. 23",
+        "options": [],
+        "correct": "D",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Series and Sequences",
+        "topicId": "qa_progressions",
+        "sectionId": "QA"
+      }
+    ],
+    "QA:qa_tsd": [
+      {
+        "question": "Man @12km/h → 10min late for train. @15km/h → 10min early. Distance home-to-station, km, is",
+        "options": [],
+        "correct": "20",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Time, Speed and Distance",
+        "topicId": "qa_tsd",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Motorboat downriver to office & back. Double boat speed → total time -75%. Ratio original boat speed:river speed is",
+        "options": [
+          "A) √6:√2",
+          "B) √7:2",
+          "C) 2√5:3",
+          "D) 3:2"
+        ],
+        "correct": "B",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Time, Speed and Distance",
+        "topicId": "qa_tsd",
+        "sectionId": "QA"
+      },
+      {
+        "question": "10km race: A beats B by 1km, B beats C by 1km. A beats C by how many meters?",
+        "options": [],
+        "correct": "1900",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Time, Speed and Distance",
+        "topicId": "qa_tsd",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Arun: home→hostel @60mph. Return: half route @25mph + bypass(+5mi) @50mph. Return took 30min more than onward. Total distance, miles, is",
+        "options": [
+          "A) 55",
+          "B) 60",
+          "C) 65",
+          "D) 70"
+        ],
+        "correct": "C",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Time, Speed and Distance",
+        "topicId": "qa_tsd",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Motorbike leaves A 1pm, car leaves B 2pm (2× speed), meet 3:40pm at 168km from A. Distance A-B, km, is",
+        "options": [
+          "A) 364",
+          "B) 378",
+          "C) 380",
+          "D) 388"
+        ],
+        "correct": "B",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Time, Speed and Distance",
+        "topicId": "qa_tsd",
+        "sectionId": "QA"
+      },
+      {
+        "question": "A-B=60km. Partha,Narayan start together A→B. Partha takes 4hr more than Narayan. Partha reaches midpoint 2hr before Narayan reaches B. Partha's speed, km/h, is",
+        "options": [
+          "A) 6",
+          "B) 3",
+          "C) 4",
+          "D) 5"
+        ],
+        "correct": "D",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Time, Speed and Distance",
+        "topicId": "qa_tsd",
+        "sectionId": "QA"
+      },
+      {
+        "question": "P between A,B; BP=3×AP. Car1 A→B, Car2 B→A same start. Car2 reaches P 1hr after Car1. Car2 speed=half Car1. Car1's time A→P, minutes, is",
+        "options": [],
+        "correct": "12",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Time, Speed and Distance",
+        "topicId": "qa_tsd",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Train T leaves X 3pm for Y. Train S (3/4 speed of T) leaves Y 4pm for X. Meet at Z, XZ=3/5 of XY. T's total journey time X→Y, hours, is",
+        "options": [],
+        "correct": "15",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Time, Speed and Distance",
+        "topicId": "qa_tsd",
+        "sectionId": "QA"
+      }
+    ],
+    "QA:qa_tw": [
+      {
+        "question": "Person alone=120 days. Day1 alone, Day2 +1 person(120days), Day3 +1 more, etc. Days to complete is",
+        "options": [],
+        "correct": "15",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Time, Work, Pipe & Cistern",
+        "topicId": "qa_tw",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Inlet fills empty tank in 8hr (outlet closed); 10hr (outlet open). Outlet alone: hours to half-empty full tank is",
+        "options": [
+          "A) 20",
+          "B) 30",
+          "C) 40",
+          "D) 45"
+        ],
+        "correct": "A",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Time, Work, Pipe & Cistern",
+        "topicId": "qa_tw",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Amal=10 days, Bimal=8 days. All 3 (+Kamal) finish in 4 days, paid Rs1000 proportionally. Kamal's share, Rs, is",
+        "options": [
+          "A) 100",
+          "B) 200",
+          "C) 300",
+          "D) 400"
+        ],
+        "correct": "A",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2017",
+        "sourceKind": "previous-year",
+        "topic": "Time, Work, Pipe & Cistern",
+        "topicId": "qa_tw",
+        "sectionId": "QA"
+      },
+      {
+        "question": "B needs 25% more time than A alone. Together finish in 13 days: A alone till half done, A+B 4 days, B alone remaining 5%. B's alone days is",
+        "options": [
+          "A) 16",
+          "B) 22",
+          "C) 20",
+          "D) 18"
+        ],
+        "correct": "C",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Time, Work, Pipe & Cistern",
+        "topicId": "qa_tw",
+        "sectionId": "QA"
+      },
+      {
+        "question": "15 humans+5 robots=30 days. 5 humans+15 robots=60 days. 15 humans alone days is",
+        "options": [
+          "A) 40",
+          "B) 32",
+          "C) 36",
+          "D) 45"
+        ],
+        "correct": "B",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Time, Work, Pipe & Cistern",
+        "topicId": "qa_tw",
+        "sectionId": "QA"
+      },
+      {
+        "question": "6 fill+5 drain pipes fill tank in 6hr. 5 fill+6 drain=60hr. 2 fill+1 drain, hours to fill is",
+        "options": [],
+        "correct": "10",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Time, Work, Pipe & Cistern",
+        "topicId": "qa_tw",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Tank emptied daily. Mon: A alone finishes 8PM. Tue: B alone finishes 6PM. Wed: A till 5PM, B 5-7PM finishes. Thu (both together) finish time is",
+        "options": [
+          "A) 4:12PM",
+          "B) 4:24PM",
+          "C) 4:48PM",
+          "D) 4:36PM"
+        ],
+        "correct": "B",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Time, Work, Pipe & Cistern",
+        "topicId": "qa_tw",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Ramesh+Ganesh=16 days. After 7 days together, Ramesh's efficiency falls 30%, total takes 17 days. Ganesh alone (after Ramesh sick) days for remaining work is",
+        "options": [
+          "A) 12",
+          "B) 14.5",
+          "C) 13.5",
+          "D) 11"
+        ],
+        "correct": "C",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Time, Work, Pipe & Cistern",
+        "topicId": "qa_tw",
+        "sectionId": "QA"
+      }
+    ],
+    "QA:qa_numbers": [
+      {
+        "question": "Integers x: 0.25<2^x<200, and 2^x+2 divisible by 3 or 4. Count is",
+        "options": [],
+        "correct": "5",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Number System and Modern Maths",
+        "topicId": "qa_numbers",
+        "sectionId": "QA"
+      },
+      {
+        "question": "N,x positive integers, N^N=2^160, N²+2^N multiple of 2^x. Largest possible x is",
+        "options": [],
+        "correct": "10",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Number System and Modern Maths",
+        "topicId": "qa_numbers",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Factors of 2⁴×3⁵×10⁴ that are perfect squares >1. Count is",
+        "options": [],
+        "correct": "44",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2019",
+        "sourceKind": "previous-year",
+        "topic": "Number System and Modern Maths",
+        "topicId": "qa_numbers",
+        "sectionId": "QA"
+      },
+      {
+        "question": "a,b,c positive integers, ab=432, bc=96, c<9. Smallest possible a+b+c is",
+        "options": [
+          "A) 56",
+          "B) 49",
+          "C) 46",
+          "D) 59"
+        ],
+        "correct": "C",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2020",
+        "sourceKind": "previous-year",
+        "topic": "Number System and Modern Maths",
+        "topicId": "qa_numbers",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Integers 1-120 divisible by none of 2,5,7. Count is",
+        "options": [
+          "A) 41",
+          "B) 42",
+          "C) 40",
+          "D) 43"
+        ],
+        "correct": "A",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2020",
+        "sourceKind": "previous-year",
+        "topic": "Number System and Modern Maths",
+        "topicId": "qa_numbers",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Pairs (a,b) positive integers, a≤b, ab=4^2017. Count is",
+        "options": [
+          "A) 2019",
+          "B) 2018",
+          "C) 2020",
+          "D) 2017"
+        ],
+        "correct": "B",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2020",
+        "sourceKind": "previous-year",
+        "topic": "Number System and Modern Maths",
+        "topicId": "qa_numbers",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Three-digit numbers >100 that increase by 198 when digits reversed. Count is",
+        "options": [],
+        "correct": "70",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2021",
+        "sourceKind": "previous-year",
+        "topic": "Number System and Modern Maths",
+        "topicId": "qa_numbers",
+        "sectionId": "QA"
+      },
+      {
+        "question": "A=largest positive integer dividing all 3^k+4^k+5^k. B=largest dividing all 4^k+3(4^k)+4^(k+2). A+B equals",
+        "options": [],
+        "correct": "82",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2022",
+        "sourceKind": "previous-year",
+        "topic": "Number System and Modern Maths",
+        "topicId": "qa_numbers",
+        "sectionId": "QA"
+      }
+    ],
+    "QA:qa_si_ci": [
+      {
+        "question": "John borrows Rs210000 @10% annual compound, 2 equal installments (yr1,yr2). Each installment, Rs, is",
+        "options": [],
+        "correct": "121000",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Simple Interest and Compound Interest",
+        "topicId": "qa_si_ci",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Gopal borrows X from Ankit@8%, adds Y, lends X+Y to Ishan@10%. Net interest retained=Ankit's interest. If lent X+2Y instead, retained increases by Rs150. Compounded annually. X+Y is",
+        "options": [],
+        "correct": "4000",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2018",
+        "sourceKind": "previous-year",
+        "topic": "Simple Interest and Compound Interest",
+        "topicId": "qa_si_ci",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Rs15 lakh total: part in FD @6%, rest split 2:1 @4%,3%. Total annual interest=Rs76000. FD amount, Rs lakh, is",
+        "options": [],
+        "correct": "9",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2019",
+        "sourceKind": "previous-year",
+        "topic": "Simple Interest and Compound Interest",
+        "topicId": "qa_si_ci",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Amal: Rs12000@8% annual compound + Rs10000@6% semi-annual compound, 1yr. Bimal: SI 7.5%, 1yr, same interest. Bimal's amount, Rs, is",
+        "options": [],
+        "correct": "20920",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2019",
+        "sourceKind": "previous-year",
+        "topic": "Simple Interest and Compound Interest",
+        "topicId": "qa_si_ci",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Veeru ₹10000 @5% SI. 2yr later, Joy ₹8000 @10% SI. Years after Veeru's investment when balances equal is",
+        "options": [],
+        "correct": "12",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2020",
+        "sourceKind": "previous-year",
+        "topic": "Simple Interest and Compound Interest",
+        "topicId": "qa_si_ci",
+        "sectionId": "QA"
+      },
+      {
+        "question": "CI (2yr,5%) exceeds SI (3yr,3%) by Rs1125, same principal. Principal, Rs, is",
+        "options": [],
+        "correct": "90000",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2020",
+        "sourceKind": "previous-year",
+        "topic": "Simple Interest and Compound Interest",
+        "topicId": "qa_si_ci",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Invested @10% half-yearly compound. After 1.5yr, total=Rs18522. Invested amount, Rs, is",
+        "options": [],
+        "correct": "16000",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2020",
+        "sourceKind": "previous-year",
+        "topic": "Simple Interest and Compound Interest",
+        "topicId": "qa_si_ci",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Anil compound interest: 2nd year=₹806.25, 3rd year=₹866.72. 4th year interest nearest to",
+        "options": [
+          "A) 931.72",
+          "B) 926.84",
+          "C) 929.48",
+          "D) 934.65"
+        ],
+        "correct": "A",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2021",
+        "sourceKind": "previous-year",
+        "topic": "Simple Interest and Compound Interest",
+        "topicId": "qa_si_ci",
+        "sectionId": "QA"
+      }
+    ],
+    "QA:qa_coordinate": [
+      {
+        "question": "Parallelogram ABCD, A(1,1), B(3,4), C(-2,8). Coordinates of D are",
+        "options": [
+          "A) (-4,5)",
+          "B) (4,5)",
+          "C) (-3,4)",
+          "D) (0,11)"
+        ],
+        "correct": "A",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2022",
+        "sourceKind": "previous-year",
+        "topic": "Coordinate Geometry",
+        "topicId": "qa_coordinate",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Circle C: x²+y²+4x-6y-3=0. L = locus of intersection of tangent pairs with angle 60° . Points where L touches x=6 is",
+        "options": [
+          "A) (6,4)",
+          "B) (6,8)",
+          "C) (6,3)",
+          "D) (6,6)"
+        ],
+        "correct": "C",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2023",
+        "sourceKind": "previous-year",
+        "topic": "Coordinate Geometry",
+        "topicId": "qa_coordinate",
+        "sectionId": "QA"
+      },
+      {
+        "question": "Triangle vertices (1,2),(7,2),(1,10). Radius of incircle is",
+        "options": [],
+        "correct": "2",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2024",
+        "sourceKind": "previous-year",
+        "topic": "Coordinate Geometry",
+        "topicId": "qa_coordinate",
+        "sectionId": "QA"
+      },
+      {
+        "question": "(x,y) coords of vertices P,Q,R of parallelogram PQRS are (-3,-2),(1,-5),(9,1). Diagonal SQ intersects x-axis at (a,0). Value of a is",
+        "options": [
+          "A) 13/4",
+          "B) 29/9",
+          "C) 10/3",
+          "D) 27/7"
+        ],
+        "correct": "B",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2025",
+        "sourceKind": "previous-year",
+        "topic": "Coordinate Geometry",
+        "topicId": "qa_coordinate",
+        "sectionId": "QA"
+      }
+    ],
+    "QA:qa_trigo": [
+      {
+        "question": "Triangle ABC, altitudes AD,BE. ∠BAC=45° , ∠ABC=θ. AD/BE equals",
+        "options": [
+          "A) √2 sinθ",
+          "B) √2 cosθ",
+          "C) (sinθ+cosθ)/√2",
+          "D) 1"
+        ],
+        "correct": "A",
+        "concept": "",
+        "difficulty": "Medium",
+        "reference": "CAT 2022",
+        "sourceKind": "previous-year",
+        "topic": "Height & Distance",
+        "topicId": "qa_trigo",
+        "sectionId": "QA"
       }
     ]
   }

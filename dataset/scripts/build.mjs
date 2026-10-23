@@ -44,15 +44,20 @@ const { resolveSection, resolveTopic, topicById } = buildResolvers(getAllTopics(
 // ctx = { parts, source, fileBase, index } — parts are folder names used to infer
 // section/topic when a record doesn't carry them explicitly.
 const normalise = (q, ctx = {}) => {
-  const options = Array.isArray(q.options) ? q.options.filter(Boolean).map(String) : []
+  // Options may be an array (["A) 23", …]) or an object ({"A":"23", …}, as emitted by some
+  // scraped PYQ sources); a null/absent options field means a TITA question.
+  let options = []
+  if (Array.isArray(q.options)) options = q.options.filter(Boolean).map(String)
+  else if (q.options && typeof q.options === 'object') options = Object.entries(q.options).map(([k, v]) => `${k}) ${v}`)
   const parts = ctx.parts || []
   const sectionId = q.sectionId || resolveSection(parts)
   if (!sectionId) return null
 
   let { topicId, topic, tags } = q
-  if (!topicId || !topic) {
-    const r = resolveTopic(sectionId, parts)
-    topicId = topicId || r.topicId
+  if (!topicId) {
+    // Prefer the record's own topic name (most specific), then fall back to folder inference.
+    const r = resolveTopic(sectionId, q.topic ? [...parts, q.topic] : parts)
+    topicId = r.topicId
     topic = topic || r.topic
     tags = tags || r.tags
   }
@@ -70,11 +75,11 @@ const normalise = (q, ctx = {}) => {
     type: options.length ? 'MCQ' : 'TITA',
     question: String(q.question || '').trim(),
     options,
-    correct: String(q.correct ?? '').trim(),
+    correct: String(q.correct ?? q.correct_option ?? q.correct_answer ?? '').trim(),
     concept: String(q.concept || '').trim(),
     solution: String(q.solution || '').trim(),
-    source: q.source || ctx.source || 'sources',
-    reference: String(q.reference || '').trim(),
+    source: ctx.source || q.source || 'sources',
+    reference: String(q.reference || (q.exam && q.year ? `${q.exam} ${q.year}` : '')).trim(),
   }
 }
 

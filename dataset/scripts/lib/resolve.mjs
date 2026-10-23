@@ -104,6 +104,11 @@ const TOPIC_ALIASES = {
   'surds-and-indices': 'qa_logs',
   'series-and-sequences': 'qa_progressions',
   'maxima-minima': 'qa_functions', 'maxima-and-minima': 'qa_functions',
+  geometry: 'qa_triangles',
+  'higher-degree-equations': 'qa_linear_eq',
+  'height-distance': 'qa_trigo', 'height-and-distance': 'qa_trigo',
+  'quadratic-equations': 'qa_linear_eq',
+  'ratio-proportion-and-variation': 'qa_ratio',
 }
 
 // Build resolvers from getAllTopics() (curriculum).

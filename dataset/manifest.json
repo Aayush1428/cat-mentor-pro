@@ -1,66 +1,133 @@
 {
-  "generatedAt": "2026-09-21T21:37:59.804Z",
+  "generatedAt": "2026-10-22T23:55:30.393Z",
   "schema": "schema.json",
-  "total": 35,
+  "total": 560,
   "bySection": {
     "DILR": 4,
-    "QA": 28,
-    "VARC": 3
+    "QA": 554,
+    "VARC": 2
   },
   "byDifficulty": {
-    "Easy": 24,
-    "Medium": 11
+    "Easy": 23,
+    "Medium": 537
   },
   "byType": {
-    "MCQ": 35
+    "MCQ": 375,
+    "TITA": 185
   },
   "bySource": {
-    "practice": 2,
+    "practice": 1,
     "seed": 4,
-    "pyqBank": 28,
-    "pyq": 1
+    "pyq": 527,
+    "pyqBank": 28
   },
   "topics": [
     {
       "sectionId": "QA",
+      "topicId": "qa_linear_eq",
+      "topic": "Linear and Special Equations",
+      "count": 57
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_logs",
+      "topic": "Logarithms",
+      "count": 52
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_triangles",
+      "topic": "Geometry",
+      "count": 50
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_tsd",
+      "topic": "Time, Speed and Distance",
+      "count": 48
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_averages",
+      "topic": "Average, Mixture and Allegation",
+      "count": 40
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_progressions",
+      "topic": "Series and Sequences",
+      "count": 39
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_tw",
+      "topic": "Time, Work, Pipe & Cistern",
+      "count": 35
+    },
+    {
+      "sectionId": "QA",
       "topicId": "qa_percentages",
-      "topic": "Percentages",
+      "topic": "Percentage",
+      "count": 31
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_functions",
+      "topic": "Functions and Graphs",
+      "count": 30
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_profit",
+      "topic": "Profit, Loss and Discount",
+      "count": 28
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_mensuration",
+      "topic": "Mensuration",
+      "count": 26
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_numbers",
+      "topic": "Number System and Modern Maths",
+      "count": 26
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_inequalities",
+      "topic": "Inequalities and Modulus",
+      "count": 24
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_si_ci",
+      "topic": "Simple Interest and Compound Interest",
+      "count": 24
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_ratio",
+      "topic": "Ratio Proportion and Variation",
+      "count": 18
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_pc",
+      "topic": "Permutations and Combinations",
+      "count": 16
+    },
+    {
+      "sectionId": "QA",
+      "topicId": "qa_coordinate",
+      "topic": "Coordinate Geometry",
       "count": 4
     },
     {
       "sectionId": "DILR",
       "topicId": "di_tables",
       "topic": "DI — Tables",
-      "count": 2
-    },
-    {
-      "sectionId": "QA",
-      "topicId": "qa_linear_eq",
-      "topic": "Linear & Quadratic Equations",
-      "count": 2
-    },
-    {
-      "sectionId": "QA",
-      "topicId": "qa_progressions",
-      "topic": "AP, GP & Special Series",
-      "count": 2
-    },
-    {
-      "sectionId": "QA",
-      "topicId": "qa_si_ci",
-      "topic": "Simple & Compound Interest",
-      "count": 2
-    },
-    {
-      "sectionId": "QA",
-      "topicId": "qa_profit",
-      "topic": "Profit, Loss & Discount",
-      "count": 2
-    },
-    {
-      "sectionId": "QA",
-      "topicId": "qa_tsd",
-      "topic": "Time, Speed & Distance",
       "count": 2
     },
     {
@@ -77,8 +144,8 @@
     },
     {
       "sectionId": "QA",
-      "topicId": "qa_averages",
-      "topic": "Averages & Mixtures",
+      "topicId": "qa_trigo",
+      "topic": "Height & Distance",
       "count": 1
     },
     {
@@ -95,44 +162,8 @@
     },
     {
       "sectionId": "QA",
-      "topicId": "qa_inequalities",
-      "topic": "Inequalities & Modulus",
-      "count": 1
-    },
-    {
-      "sectionId": "QA",
-      "topicId": "qa_logs",
-      "topic": "Logarithms & Surds",
-      "count": 1
-    },
-    {
-      "sectionId": "QA",
-      "topicId": "qa_mensuration",
-      "topic": "Mensuration (2D & 3D)",
-      "count": 1
-    },
-    {
-      "sectionId": "QA",
-      "topicId": "qa_numbers",
-      "topic": "Number System & Divisibility",
-      "count": 1
-    },
-    {
-      "sectionId": "QA",
-      "topicId": "qa_pc",
-      "topic": "Permutation & Combination",
-      "count": 1
-    },
-    {
-      "sectionId": "QA",
       "topicId": "qa_probability",
       "topic": "Probability",
-      "count": 1
-    },
-    {
-      "sectionId": "QA",
-      "topicId": "qa_ratio",
-      "topic": "Ratio & Proportion",
       "count": 1
     },
     {
@@ -148,18 +179,6 @@
       "count": 1
     },
     {
-      "sectionId": "QA",
-      "topicId": "qa_triangles",
-      "topic": "Triangles & Properties",
-      "count": 1
-    },
-    {
-      "sectionId": "QA",
-      "topicId": "qa_tw",
-      "topic": "Time & Work / Pipes & Cisterns",
-      "count": 1
-    },
-    {
       "sectionId": "VARC",
       "topicId": "grammar_tenses",
       "topic": "Grammar — Tenses & Agreement",
@@ -170,24 +189,18 @@
       "topicId": "vocab_synonyms",
       "topic": "Vocabulary — Synonyms/Antonyms",
       "count": 1
-    },
-    {
-      "sectionId": "VARC",
-      "topicId": "vocab_words",
-      "topic": "Word Usage & Fill-in-Blanks",
-      "count": 1
     }
   ],
   "files": [
     {
       "file": "questions/qa.jsonl",
       "section": "QA",
-      "count": 28
+      "count": 554
     },
     {
       "file": "questions/varc.jsonl",
       "section": "VARC",
-      "count": 3
+      "count": 2
     },
     {
       "file": "questions/dilr.jsonl",
@@ -197,7 +210,7 @@
     {
       "file": "questions/all.jsonl",
       "section": "ALL",
-      "count": 35
+      "count": 560
     }
   ]
 }
