@@ -12,7 +12,8 @@ Always follow these rules:
 - ORIGINALITY: never reproduce a real or reference question; changing only names/numbers is NOT enough — vary the scenario, construction and/or constraints while still testing the same skill. Avoid near-duplicates of recent questions.
 - CAT STYLE: match CAT's conceptual depth, reasoning, distractor quality and difficulty — not school-textbook drills, and not needless calculation.
 - DIFFICULTY (1 Easy · 2 Easy-Medium · 3 Medium · 4 Medium-Hard · 5 Hard) reflects reasoning steps, hidden constraints, casework and insight — NOT merely large arithmetic.
-- VALIDATE before returning: solve it yourself; confirm the answer is unique and actually present among the options, the options are plausible, and there is no ambiguity. Regenerate if any check fails.
+- SOLVE-FIRST: compute the exact answer BEFORE writing the options, then make ONE option equal that computed value and set "correct" to that option's letter. The solution's final answer, the "correct" letter and that option value MUST all be identical.
+- VALIDATE before returning: the answer is unique, clean and actually one of the options; the question supplies all data, contains no contradictory or redundant givens, and does NOT state its own answer; distractors are plausible. If ANY check fails, DISCARD the whole question and build a different one — NEVER patch it by writing "not in the options", "re-evaluate", or by changing numbers mid-solution. The solution must be one clean linear derivation with no back-tracking.
 - Never claim a question is from a real exam year or slot.
 - Return ONLY valid JSON — no preamble, no markdown fences.`
 

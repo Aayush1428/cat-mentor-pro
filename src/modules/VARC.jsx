@@ -6,9 +6,21 @@ import { logResult } from '../utils/bookmarks.js'
 import { filterNovel } from '../utils/similarity.js'
 import { catSystem } from '../data/promptContract.js'
 import { SECTIONS } from '../data/curriculum.js'
+import { pyqAnchorsForTopic, pyqAnchorsForTopics, formatAnchors } from '../utils/pyq.js'
 import { BookOpen, ChevronRight, RotateCcw, Clock, CheckCircle, XCircle } from 'lucide-react'
 
 const SYSTEM = catSystem('VARC')
+
+// Topic ids whose extracted previous-year RC questions anchor RC generation.
+const RC_ANCHOR_TOPICS = ['rc_main_idea', 'rc_inference', 'rc_tone', 'rc_vocab', 'rc_summary']
+
+// Appends a calibration block grounding generation on the student's real previous-year anchors.
+// Copyright-safe: match difficulty/structure/traps, never copy text. Returns '' when the corpus
+// has no anchors, so every generator degrades gracefully to ungrounded generation.
+const groundingNote = (anchors, what = 'questions') =>
+  anchors && anchors.length
+    ? `\n\nCALIBRATE on these real previous-year CAT ${what} from the student's own PYQ set — match their difficulty, structure, question-types and trap style, but write 100% ORIGINAL content: never reuse or lightly reword any passage, sentence or option from them.\n${formatAnchors(anchors)}`
+    : ''
 
 // Map an RC question's type to the exact curriculum topic so analytics are accurate.
 const RC_TYPE_MAP = {
@@ -21,8 +33,8 @@ const RC_TYPE_MAP = {
 const rcTopic = (type) => RC_TYPE_MAP[type] || 'RC — Inference Questions'
 
 // ─── RC Practice ──────────────────────────────────────────────────────────────
-const buildRCPrompt = (difficulty, topic) => `Generate a CAT-style Reading Comprehension passage with questions.
-Topic area: ${topic}. Difficulty: ${difficulty}.
+const buildRCPrompt = (difficulty, topic, anchors) => `Generate a CAT-style Reading Comprehension passage with questions.
+Topic area: ${topic}. Difficulty: ${difficulty}.${groundingNote(anchors, 'RC passages and questions')}
 Return ONLY this JSON:
 {
   "passage": "a ${difficulty === 'Hard' ? '600-700' : difficulty === 'Medium' ? '450-550' : '300-400'}-word passage on ${topic} — academic/intellectual writing style similar to CAT RC",
@@ -36,8 +48,8 @@ Return ONLY this JSON:
 }`
 
 // ─── Para Jumble ─────────────────────────────────────────────────────────────
-const buildPJPrompt = (difficulty) => `Generate a CAT-style Para Jumble question.
-Difficulty: ${difficulty}. Return ONLY this JSON:
+const buildPJPrompt = (difficulty, anchors) => `Generate a CAT-style Para Jumble question.
+Difficulty: ${difficulty}.${groundingNote(anchors, 'Para Jumble questions')} Return ONLY this JSON:
 {
   "sentences": {"A":"sentence text","B":"sentence text","C":"sentence text","D":"sentence text","E":"sentence text"},
   "correct_order": "e.g. DACBE",
@@ -47,7 +59,7 @@ Difficulty: ${difficulty}. Return ONLY this JSON:
 }`
 
 // ─── Para Summary ────────────────────────────────────────────────────────────
-const buildPSPrompt = () => `Generate a CAT-style Para Summary question.
+const buildPSPrompt = (anchors) => `Generate a CAT-style Para Summary question.${groundingNote(anchors, 'Para Summary questions')}
 Return ONLY this JSON:
 {
   "paragraph": "a 150-200 word paragraph (complex, academic, similar to CAT)",
@@ -91,7 +103,8 @@ function RCPractice({ hasApiKey, onNavigate }) {
     if (!hasApiKey) { onNavigate('settings'); return }
     setLoading(true); setData(null); setAnswers({}); setSubmitted(false)
     try {
-      const d = await callAI(SYSTEM, buildRCPrompt(difficulty, topic), 2500)
+      const anchors = await pyqAnchorsForTopics('VARC', RC_ANCHOR_TOPICS, 3)
+      const d = await callAI(SYSTEM, buildRCPrompt(difficulty, topic, anchors), 2500)
       setData(d); setTimerRunning(true)
     } catch (e) { showToast('Error generating passage: ' + e.message, 'error') }
     finally { setLoading(false) }
@@ -210,7 +223,8 @@ function ParaJumble({ hasApiKey, onNavigate }) {
     if (!hasApiKey) { onNavigate('settings'); return }
     setLoading(true); setData(null); setSubmitted(false)
     try {
-      const d = await callAI(SYSTEM, buildPJPrompt(difficulty), 1200)
+      const anchors = await pyqAnchorsForTopic('VARC', 'para_jumble', 3)
+      const d = await callAI(SYSTEM, buildPJPrompt(difficulty, anchors), 1200)
       setData(d)
       setUserOrder(Object.keys(d.sentences).sort(() => Math.random() - 0.5))
     } catch (e) { showToast('Error: ' + e.message, 'error') }
@@ -296,7 +310,7 @@ function ParaSummary({ hasApiKey, onNavigate }) {
   const generate = async () => {
     if (!hasApiKey) { onNavigate('settings'); return }
     setLoading(true); setData(null); setSelected(null); setSubmitted(false)
-    try { const d = await callAI(SYSTEM, buildPSPrompt(), 1200); setData(d) }
+    try { const anchors = await pyqAnchorsForTopic('VARC', 'para_summary', 3); const d = await callAI(SYSTEM, buildPSPrompt(anchors), 1200); setData(d) }
     catch (e) { showToast('Error: ' + e.message, 'error') }
     finally { setLoading(false) }
   }
@@ -416,8 +430,8 @@ function Grammar({ hasApiKey, onNavigate }) {
 }
 
 // ─── Daily RC ─────────────────────────────────────────────────────────────────
-const buildDailyRCPrompt = (today) => `Generate today's CAT Reading Comprehension practice set: EXACTLY 2 passages, each from a DIFFERENT genre chosen from [philosophy/abstract, economics/business, science/technology, history/culture, psychology/behaviour, literature/art]. Each passage 500-650 words in dense, academic CAT style. Each passage has EXACTLY 4 questions covering Main Idea, Inference, Tone, and Vocabulary in Context.
-Date seed: ${today}.
+const buildDailyRCPrompt = (today, anchors) => `Generate today's CAT Reading Comprehension practice set: EXACTLY 2 passages, each from a DIFFERENT genre chosen from [philosophy/abstract, economics/business, science/technology, history/culture, psychology/behaviour, literature/art]. Each passage 500-650 words in dense, academic CAT style. Each passage has EXACTLY 4 questions covering Main Idea, Inference, Tone, and Vocabulary in Context.
+Date seed: ${today}.${groundingNote(anchors, 'RC passages and questions')}
 Return ONLY this JSON:
 {"sets":[{"genre":"the genre","theme":"one-sentence central argument","passage":"the 500-650 word passage","questions":[{"q":"question","options":["A) ..","B) ..","C) ..","D) .."],"correct":"A|B|C|D","explanation":"why correct and others wrong","type":"Main Idea|Inference|Tone|Vocabulary in Context"}]}]}`
 
@@ -436,7 +450,8 @@ function DailyRC({ hasApiKey, onNavigate }) {
   const load = async () => {
     setLoading(true); setData(null); setAnswers({}); setSubmitted(false); setSec(0)
     try {
-      const d = await getCachedContent(`daily_rc_${today}`, SYSTEM, buildDailyRCPrompt(today), 4000)
+      const anchors = await pyqAnchorsForTopics('VARC', RC_ANCHOR_TOPICS, 3)
+      const d = await getCachedContent(`daily_rc_${today}`, SYSTEM, buildDailyRCPrompt(today, anchors), 4000)
       if (!d?.sets?.length) throw new Error('No passages returned')
       setData(d)
       clearInterval(timerRef.current)
@@ -563,12 +578,136 @@ function DailyRC({ hasApiKey, onNavigate }) {
   )
 }
 
+// ─── Odd One Out ──────────────────────────────────────────────────────────────
+const buildOOOPrompt = (anchors) => `Generate a CAT-style "Odd One Out" question: FIVE sentences labelled 1,2,3,4,5 where exactly FOUR combine into ONE coherent paragraph and ONE sentence does NOT belong. The student must identify the odd sentence.${groundingNote(anchors, 'Odd One Out questions')}
+Return ONLY this JSON:
+{"sentences":{"1":"sentence","2":"sentence","3":"sentence","4":"sentence","5":"sentence"},"correct":"1|2|3|4|5","explanation":"why the four cohere into a paragraph and why the odd one breaks the theme/flow (reference words, connectors, scope)","topic":"the theme of the four-sentence paragraph"}`
+
+function OddOneOut({ hasApiKey, onNavigate }) {
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [selected, setSelected] = useState(null)
+  const [submitted, setSubmitted] = useState(false)
+
+  const generate = async () => {
+    if (!hasApiKey) { onNavigate('settings'); return }
+    setLoading(true); setData(null); setSelected(null); setSubmitted(false)
+    try { const anchors = await pyqAnchorsForTopic('VARC', 'odd_sentence', 3); const d = await callAI(SYSTEM, buildOOOPrompt(anchors), 1200); setData(d) }
+    catch (e) { showToast('Error: ' + e.message, 'error') }
+    finally { setLoading(false) }
+  }
+
+  const submit = () => { setSubmitted(true); recordAttempt('VARC', 'Odd Sentence Out', selected === data.correct) }
+
+  return (
+    <div className="space-y-4">
+      <button onClick={generate} disabled={loading} className="w-full py-3 bg-cat-purple text-white rounded-xl font-semibold hover:opacity-90 disabled:opacity-50 transition-all">
+        {loading ? 'Generating...' : 'Generate Odd One Out Question'}
+      </button>
+      {loading && <CardSkeleton />}
+      {data && !loading && (
+        <Card>
+          <p className="text-sm font-semibold text-text-primary mb-1">Four of these sentences form a paragraph. Pick the ODD one out.</p>
+          <p className="text-xs text-text-muted mb-3">Theme: {data.topic}</p>
+          <div className="space-y-2">
+            {Object.keys(data.sentences).map((k) => {
+              const isSel = selected === k
+              const isCorrect = submitted && k === data.correct
+              const isWrong = submitted && isSel && !isCorrect
+              return (
+                <button key={k} onClick={() => !submitted && setSelected(k)} disabled={submitted}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl text-xs border transition-all flex items-start gap-2 ${isCorrect?'border-cat-green bg-cat-green/10 text-cat-green':isWrong?'border-cat-red bg-cat-red/10 text-cat-red':isSel?'border-cat-purple bg-cat-purple/10 text-cat-purple':'border-border text-text-secondary hover:border-border-light disabled:opacity-60'}`}>
+                  <span className="font-bold flex-shrink-0">{k}.</span><span className="flex-1">{data.sentences[k]}</span>{isCorrect?' ✓':''}{isWrong?' ✗':''}
+                </button>
+              )
+            })}
+          </div>
+          {!submitted && <button onClick={submit} disabled={!selected} className="mt-3 w-full py-2.5 bg-cat-purple text-white rounded-xl text-sm font-semibold disabled:opacity-40 transition-all">Submit</button>}
+          {submitted && (
+            <div className="mt-3 bg-bg-secondary rounded-lg p-3 text-xs text-text-secondary leading-relaxed">
+              <p className="font-semibold text-cat-green mb-1">Odd one: {data.correct}</p>
+              <p>{data.explanation}</p>
+              <button onClick={generate} className="mt-3 w-full py-2.5 bg-cat-purple text-white rounded-xl font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2"><RotateCcw size={13}/> Next</button>
+            </div>
+          )}
+        </Card>
+      )}
+    </div>
+  )
+}
+
+// ─── Sentence Insertion ───────────────────────────────────────────────────────
+const buildSIPrompt = (anchors) => `Generate a CAT-style Sentence Insertion question: a short paragraph containing FOUR candidate insertion points marked literally as [1], [2], [3], [4], plus ONE sentence that fits best at exactly ONE of those points. The student picks the correct position.${groundingNote(anchors, 'Sentence Insertion questions')}
+Return ONLY this JSON:
+{"paragraph":"the paragraph text with the markers [1] [2] [3] [4] placed at the candidate points","sentence":"the sentence to insert","correct":"1|2|3|4","explanation":"why that position fits (logical/referential/temporal continuity) and why the others do not"}`
+
+function SentenceInsertion({ hasApiKey, onNavigate }) {
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [selected, setSelected] = useState(null)
+  const [submitted, setSubmitted] = useState(false)
+
+  const generate = async () => {
+    if (!hasApiKey) { onNavigate('settings'); return }
+    setLoading(true); setData(null); setSelected(null); setSubmitted(false)
+    try { const anchors = await pyqAnchorsForTopic('VARC', 'sentence_insertion', 3); const d = await callAI(SYSTEM, buildSIPrompt(anchors), 1200); setData(d) }
+    catch (e) { showToast('Error: ' + e.message, 'error') }
+    finally { setLoading(false) }
+  }
+
+  const submit = () => { setSubmitted(true); recordAttempt('VARC', 'Sentence Insertion', selected === data.correct) }
+
+  return (
+    <div className="space-y-4">
+      <button onClick={generate} disabled={loading} className="w-full py-3 bg-cat-blue text-white rounded-xl font-semibold hover:opacity-90 disabled:opacity-50 transition-all">
+        {loading ? 'Generating...' : 'Generate Sentence Insertion Question'}
+      </button>
+      {loading && <CardSkeleton />}
+      {data && !loading && (
+        <div className="space-y-4">
+          <Card>
+            <p className="text-xs font-semibold text-cat-blue uppercase tracking-wider mb-2">Paragraph</p>
+            <p className="text-sm text-text-secondary leading-relaxed bg-bg-secondary rounded-lg p-4 whitespace-pre-wrap">{data.paragraph}</p>
+          </Card>
+          <Card>
+            <p className="text-sm font-semibold text-text-primary mb-2">Insert this sentence at the best position:</p>
+            <p className="text-sm text-cat-orange italic bg-bg-secondary rounded-lg p-3 mb-3">"{data.sentence}"</p>
+            <div className="flex gap-2">
+              {['1','2','3','4'].map((k) => {
+                const isSel = selected === k
+                const isCorrect = submitted && k === data.correct
+                const isWrong = submitted && isSel && !isCorrect
+                return (
+                  <button key={k} onClick={() => !submitted && setSelected(k)} disabled={submitted}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-bold border transition-all ${isCorrect?'border-cat-green bg-cat-green/10 text-cat-green':isWrong?'border-cat-red bg-cat-red/10 text-cat-red':isSel?'border-cat-blue bg-cat-blue/10 text-cat-blue':'border-border text-text-secondary hover:border-border-light disabled:opacity-60'}`}>
+                    [{k}]
+                  </button>
+                )
+              })}
+            </div>
+            {!submitted && <button onClick={submit} disabled={!selected} className="mt-3 w-full py-2.5 bg-cat-blue text-white rounded-xl text-sm font-semibold disabled:opacity-40 transition-all">Submit</button>}
+            {submitted && (
+              <div className="mt-3 bg-bg-secondary rounded-lg p-3 text-xs text-text-secondary leading-relaxed">
+                <p className="font-semibold text-cat-green mb-1">Correct position: [{data.correct}]</p>
+                <p>{data.explanation}</p>
+                <button onClick={generate} className="mt-3 w-full py-2.5 bg-cat-blue text-white rounded-xl font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2"><RotateCcw size={13}/> Next</button>
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── VARC Main ────────────────────────────────────────────────────────────────
 const TABS = [
   { id: 'daily',    label: '🗞️ Daily RC' },
   { id: 'rc',       label: '📖 Reading Comprehension' },
   { id: 'pj',       label: '🔀 Para Jumbles' },
   { id: 'ps',       label: '📝 Para Summary' },
+  { id: 'ooo',      label: '🧩 Odd One Out' },
+  { id: 'si',       label: '➕ Sentence Insertion' },
   { id: 'grammar',  label: '✍️ Grammar' },
 ]
 
@@ -576,7 +715,7 @@ export default function VARC({ hasApiKey, onNavigate }) {
   const [tab, setTab] = useState('rc')
   return (
     <div className="animate-fade-in max-w-3xl">
-      <SectionHeader title="VARC Practice" subtitle="Daily RC · Reading Comprehension · Para Jumbles · Para Summary · Grammar" />
+      <SectionHeader title="VARC Practice" subtitle="Daily RC · Reading Comprehension · Para Jumbles · Para Summary · Odd One Out · Sentence Insertion · Grammar" />
       <div className="flex flex-wrap gap-2 mb-5">
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
@@ -589,6 +728,8 @@ export default function VARC({ hasApiKey, onNavigate }) {
       {tab === 'rc'      && <RCPractice hasApiKey={hasApiKey} onNavigate={onNavigate} />}
       {tab === 'pj'      && <ParaJumble hasApiKey={hasApiKey} onNavigate={onNavigate} />}
       {tab === 'ps'      && <ParaSummary hasApiKey={hasApiKey} onNavigate={onNavigate} />}
+      {tab === 'ooo'     && <OddOneOut hasApiKey={hasApiKey} onNavigate={onNavigate} />}
+      {tab === 'si'      && <SentenceInsertion hasApiKey={hasApiKey} onNavigate={onNavigate} />}
       {tab === 'grammar' && <Grammar hasApiKey={hasApiKey} onNavigate={onNavigate} />}
     </div>
   )

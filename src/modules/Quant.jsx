@@ -27,7 +27,9 @@ Return ONLY a JSON array:
   "concept": "the specific formula or concept used",
   "shortcut": "a faster approach or shortcut if one exists, else empty string",
   "difficulty": "${difficulty}"
-}]`
+}]
+
+Before writing each item: solve it, then build options so your computed answer is exactly one of them. "correct" and the solution's final answer must be the same option. If they ever disagree, rebuild the question — never mention options being missing or re-evaluate mid-solution.`
 
 const PYQ_SYSTEM = catSystem('QA', `You write NEW questions closely modeled on the real CAT anchors shown (previous-year papers and/or the student's own practice material): keep each anchor's concept, structure and difficulty but change the numbers and context. Cite the anchor you modeled each question on.`)
 
@@ -45,7 +47,9 @@ Return ONLY a JSON array:
   "concept": "the specific formula or concept used",
   "reference": "[1]",
   "difficulty": "Easy|Medium|Hard"
-}]`
+}]
+
+Before writing each item: solve it, then build options so your computed answer is exactly one of them. "correct" and the solution's final answer must be the same option. If they ever disagree, rebuild the question — never mention options being missing or re-evaluate mid-solution.`
 
 const TAG_COLORS = { Arithmetic: 'orange', Numbers: 'blue', Algebra: 'purple', Geometry: 'green', Modern: 'pink' }
 
@@ -221,7 +225,9 @@ function TopicPractice({ topic, hasApiKey, onNavigate }) {
 // ─── Today's Practice (personalised daily 5) ─────────────────────────────────
 const buildDailySlotPrompt = (slot, anchors) => `Generate ONE CAT-style Quantitative Aptitude question on "${slot.topic}". Difficulty: ${slot.difficulty}.
 ${anchors && anchors.length ? `Model it on these real CAT questions (previous-year papers and/or my own practice) — same concept and difficulty, but new numbers and context:\n${formatAnchors(anchors)}\n` : ''}Return ONLY this JSON object (NOT an array):
-{"question":"full question with all data","options":["A) ","B) ","C) ","D) "],"correct":"A|B|C|D","solution":"step-by-step with calculations","concept":"the concept tested","shortcut":"a faster approach or empty string","difficulty":"${slot.difficulty}"${anchors && anchors.length ? ',"reference":"[1]"' : ''}}`
+{"question":"full question with all data","options":["A) ","B) ","C) ","D) "],"correct":"A|B|C|D","solution":"step-by-step with calculations","concept":"the concept tested","shortcut":"a faster approach or empty string","difficulty":"${slot.difficulty}"${anchors && anchors.length ? ',"reference":"[1]"' : ''}}
+
+Solve it first, then build options so your computed answer is exactly one of them; "correct" and the solution's final answer must be the same option. Never mention options being missing or re-evaluate mid-solution.`
 
 const qa5Key = () => `cat_qa5_${isoDay()}`
 const loadQA5 = () => { try { return JSON.parse(localStorage.getItem(qa5Key()) || '{}') } catch { return {} } }
